@@ -52,7 +52,7 @@ export function PostCard({ post, profile, onRequestUsername, onUpdate }: PostCar
         <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="mb-2">
-            <h3 className="font-semibold text-foreground text-sm">{profile?.name || "My Moments"}</h3>
+            <h3 className="font-semibold text-foreground text-sm">{post.title || profile?.name || "My Moments"}</h3>
           </div>
 
           {/* Description */}

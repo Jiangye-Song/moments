@@ -15,6 +15,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const post = await addPost({
       photos: body.photos,
+      title: body.title || "",
       description: body.description,
       date: body.date,
     })

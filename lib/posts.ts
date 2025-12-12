@@ -10,6 +10,21 @@ const DEFAULT_PROFILE: ProfileSettings = {
   bannerUrl: null,
 }
 
+// Helper to ensure JSONB fields are properly parsed as arrays
+function parseJsonArray<T>(value: T[] | string | null | undefined, defaultValue: T[] = []): T[] {
+  if (!value) return defaultValue
+  if (Array.isArray(value)) return value
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value)
+      return Array.isArray(parsed) ? parsed : defaultValue
+    } catch {
+      return defaultValue
+    }
+  }
+  return defaultValue
+}
+
 export async function getPosts(): Promise<Post[]> {
   const dbPosts = await db.select().from(posts).orderBy(desc(posts.createdAt))
   
@@ -18,11 +33,12 @@ export async function getPosts(): Promise<Post[]> {
       const postComments = await db.select().from(comments).where(eq(comments.postId, post.id))
       return {
         id: post.id,
-        photos: post.photos,
+        title: post.title,
+        photos: parseJsonArray(post.photos),
         description: post.description,
         date: post.date,
         createdAt: post.createdAt.toISOString(),
-        likes: post.likes,
+        likes: parseJsonArray(post.likes),
         comments: postComments.map((c) => ({
           id: c.id,
           username: c.username,
@@ -99,6 +115,7 @@ export async function updateProfile(profileData: Partial<ProfileSettings>): Prom
 
 export async function addPost(post: Omit<Post, "id" | "createdAt" | "likes" | "comments">): Promise<Post> {
   const [newPost] = await db.insert(posts).values({
+    title: post.title,
     description: post.description,
     date: post.date,
     photos: post.photos,
@@ -107,29 +124,31 @@ export async function addPost(post: Omit<Post, "id" | "createdAt" | "likes" | "c
   
   return {
     id: newPost.id,
-    photos: newPost.photos,
+    title: newPost.title,
+    photos: parseJsonArray(newPost.photos),
     description: newPost.description,
     date: newPost.date,
     createdAt: newPost.createdAt.toISOString(),
-    likes: newPost.likes,
+    likes: parseJsonArray(newPost.likes),
     comments: [],
   }
 }
 
 export async function updatePost(
   postId: string,
-  updates: Partial<Pick<Post, "description" | "date" | "photos">>,
+  updates: Partial<Pick<Post, "title" | "description" | "date" | "photos">>,
 ): Promise<Post | null> {
   const existingPosts = await db.select().from(posts).where(eq(posts.id, postId))
   if (existingPosts.length === 0) return null
   
   const existingPost = existingPosts[0]
+  const existingPhotos = parseJsonArray(existingPost.photos)
   
   if (updates.photos) {
     const newPhotoUrls = new Set(updates.photos.map((p) => p.url))
     
     // Delete photos that are no longer in the post
-    for (const oldPhoto of existingPost.photos) {
+    for (const oldPhoto of existingPhotos) {
       if (!newPhotoUrls.has(oldPhoto.url)) {
         try {
           await del(oldPhoto.url)
@@ -142,6 +161,7 @@ export async function updatePost(
   
   const [updatedPost] = await db.update(posts)
     .set({
+      ...(updates.title !== undefined && { title: updates.title }),
       ...(updates.description !== undefined && { description: updates.description }),
       ...(updates.date !== undefined && { date: updates.date }),
       ...(updates.photos !== undefined && { photos: updates.photos }),
@@ -153,11 +173,12 @@ export async function updatePost(
   
   return {
     id: updatedPost.id,
-    photos: updatedPost.photos,
+    title: updatedPost.title,
+    photos: parseJsonArray(updatedPost.photos),
     description: updatedPost.description,
     date: updatedPost.date,
     createdAt: updatedPost.createdAt.toISOString(),
-    likes: updatedPost.likes,
+    likes: parseJsonArray(updatedPost.likes),
     comments: postComments.map((c) => ({
       id: c.id,
       username: c.username,
@@ -193,13 +214,14 @@ export async function addLike(postId: string, username: string): Promise<{ succe
   if (existingPosts.length === 0) return { success: false, alreadyLiked: false }
   
   const post = existingPosts[0]
+  const likesArray = parseJsonArray(post.likes)
   
-  if (post.likes.includes(username)) {
+  if (likesArray.includes(username)) {
     return { success: true, alreadyLiked: true }
   }
   
   await db.update(posts)
-    .set({ likes: [...post.likes, username] })
+    .set({ likes: [...likesArray, username] })
     .where(eq(posts.id, postId))
   
   return { success: true, alreadyLiked: false }

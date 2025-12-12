@@ -23,6 +23,7 @@ async function migrate() {
   await sql`
     CREATE TABLE IF NOT EXISTS posts (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      title TEXT NOT NULL DEFAULT '',
       description TEXT NOT NULL,
       date TEXT NOT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -31,6 +32,12 @@ async function migrate() {
     )
   `
   console.log("✓ Posts table created")
+  
+  // Add title column if it doesn't exist (for existing databases)
+  await sql`
+    ALTER TABLE posts ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT ''
+  `
+  console.log("✓ Title column ensured")
   
   // Create comments table
   await sql`

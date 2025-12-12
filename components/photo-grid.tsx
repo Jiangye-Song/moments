@@ -1,6 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
+import { X } from "lucide-react"
 import type { Photo } from "@/types"
 
 interface PhotoGridProps {
@@ -8,7 +10,12 @@ interface PhotoGridProps {
   onPhotoClick: (index: number) => void
 }
 
-export function PhotoGrid({ photos, onPhotoClick }: PhotoGridProps) {
+export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
+  const [showAllPhotos, setShowAllPhotos] = useState(false)
+  
+  // Ensure photos is always an array
+  const photos = Array.isArray(rawPhotos) ? rawPhotos : []
+  
   if (photos.length === 0) return null
 
   if (photos.length === 1) {
@@ -74,22 +81,69 @@ export function PhotoGrid({ photos, onPhotoClick }: PhotoGridProps) {
   }
 
   // 5+ photos: 3-column grid
+  const maxVisible = 9
+  const remainingCount = photos.length - maxVisible
+  const hasMore = remainingCount > 0
+
   return (
-    <div className="grid grid-cols-3 gap-1 max-w-[280px]">
-      {photos.slice(0, 9).map((photo, index) => (
-        <div
-          key={photo.id}
-          className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
-          onClick={() => onPhotoClick(index)}
-        >
-          <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
-          {index === 8 && photos.length > 9 && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="text-white font-semibold">+{photos.length - 9}</span>
+    <>
+      <div className="grid grid-cols-3 gap-1 max-w-[280px]">
+        {photos.slice(0, maxVisible).map((photo, index) => {
+          const isLastVisible = index === maxVisible - 1 && hasMore
+          
+          return (
+            <div
+              key={photo.id}
+              className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
+              onClick={() => {
+                if (isLastVisible) {
+                  setShowAllPhotos(true)
+                } else {
+                  onPhotoClick(index)
+                }
+              }}
+            >
+              <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
+              {isLastVisible && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">+{remainingCount}</span>
+                </div>
+              )}
             </div>
-          )}
+          )
+        })}
+      </div>
+
+      {/* Expanded view for all photos */}
+      {showAllPhotos && (
+        <div className="fixed inset-0 bg-black/80 z-50 overflow-auto p-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white text-lg font-semibold">All Photos ({photos.length})</h3>
+              <button
+                onClick={() => setShowAllPhotos(false)}
+                className="text-white hover:text-gray-300 p-2"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {photos.map((photo, index) => (
+                <div
+                  key={photo.id}
+                  className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
+                  onClick={() => {
+                    setShowAllPhotos(false)
+                    onPhotoClick(index)
+                  }}
+                >
+                  <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      ))}
-    </div>
+      )}
+    </>
   )
 }

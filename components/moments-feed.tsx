@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useMemo } from "react"
 import Image from "next/image"
 import useSWR from "swr"
 import { Camera, User } from "lucide-react"
+import { format } from "date-fns"
 import type { Post, ProfileSettings } from "@/types"
 import { PostCard } from "./post-card"
 import { UsernameDialog } from "./username-dialog"
@@ -34,6 +35,42 @@ export function MomentsFeed() {
     setUsernameDialogOpen(false)
     setPendingAction(null)
   }
+
+  // Group posts by year and month for timeline
+  const groupedPosts = useMemo(() => {
+    if (!posts) return []
+    
+    const groups: { year: number; month: number; monthName: string; posts: Post[]; showYear: boolean; showMonth: boolean }[] = []
+    let lastYear: number | null = null
+    let lastMonth: number | null = null
+    
+    posts.forEach((post) => {
+      const date = new Date(post.date)
+      const year = date.getFullYear()
+      const month = date.getMonth()
+      const monthName = format(date, "MMM")
+      
+      const showYear = year !== lastYear
+      const showMonth = year !== lastYear || month !== lastMonth
+      
+      if (showMonth) {
+        groups.push({
+          year,
+          month,
+          monthName,
+          posts: [post],
+          showYear,
+          showMonth: true,
+        })
+        lastYear = year
+        lastMonth = month
+      } else {
+        groups[groups.length - 1].posts.push(post)
+      }
+    })
+    
+    return groups
+  }, [posts])
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,15 +121,41 @@ export function MomentsFeed() {
         )}
 
         {posts && posts.length > 0 && (
-          <div className="divide-y divide-border">
-            {posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                profile={profile}
-                onRequestUsername={handleRequestUsername}
-                onUpdate={() => mutate()}
-              />
+          <div>
+            {groupedPosts.map((group, groupIndex) => (
+              <div key={`${group.year}-${group.month}`} className="flex">
+                {/* Timeline */}
+                <div className="flex-shrink-0 w-16 pr-4 text-right">
+                  {group.showYear && (
+                    <div className="text-2xl font-bold text-foreground leading-tight">
+                      {group.year}
+                    </div>
+                  )}
+                  {group.showMonth && (
+                    <div className={`text-lg font-semibold text-muted-foreground ${group.showYear ? '' : 'mt-4'}`}>
+                      {group.monthName}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Timeline line */}
+                <div className="flex-shrink-0 w-px bg-border relative">
+                  <div className="absolute top-6 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary" />
+                </div>
+                
+                {/* Posts */}
+                <div className="flex-1 pl-4">
+                  {group.posts.map((post) => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      profile={profile}
+                      onRequestUsername={handleRequestUsername}
+                      onUpdate={() => mutate()}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}

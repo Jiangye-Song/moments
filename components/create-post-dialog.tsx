@@ -157,17 +157,15 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
                 </div>
               ))}
 
-              {photos.length < 9 && (
-                <button
+              <button
                   onClick={() => fileInputRef.current?.click()}
                   className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center gap-1 hover:border-muted-foreground/50 transition-colors"
                 >
                   <ImagePlus className="h-6 w-6 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">Add</span>
                 </button>
-              )}
             </div>
-            <p className="text-xs text-muted-foreground">{photos.length}/9 photos</p>
+            <p className="text-xs text-muted-foreground">{photos.length} photo{photos.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
 

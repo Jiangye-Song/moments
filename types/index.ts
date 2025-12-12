@@ -19,6 +19,7 @@ export interface Comment {
 
 export interface Post {
   id: string
+  title: string
   photos: Photo[]
   description: string
   date: string

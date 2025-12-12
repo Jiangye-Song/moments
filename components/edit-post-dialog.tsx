@@ -21,6 +21,7 @@ interface EditPostDialogProps {
 }
 
 export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialogProps) {
+  const [title, setTitle] = useState(post.title || "")
   const [description, setDescription] = useState(post.description)
   const [date, setDate] = useState(format(new Date(post.date), "yyyy-MM-dd"))
   const [photos, setPhotos] = useState<Photo[]>(post.photos)
@@ -32,13 +33,6 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
   const handleAddPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
-
-    // Max 9 photos total
-    const totalPhotos = photos.length + newPhotoPreviews.length + files.length
-    if (totalPhotos > 9) {
-      alert(`You can only have up to 9 photos. Currently have ${photos.length + newPhotoPreviews.length}.`)
-      return
-    }
 
     const previews = files.map((file) => ({
       file,
@@ -69,14 +63,12 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
       let uploadedPhotos: Photo[] = []
       if (newPhotoPreviews.length > 0) {
         setIsUploading(true)
-        const uploadPromises = newPhotoPreviews.map(async ({ file }) => {
-          const formData = new FormData()
-          formData.append("file", file)
-          const res = await fetch("/api/upload", { method: "POST", body: formData })
-          const data = await res.json()
-          return { url: data.url }
+        const formData = new FormData()
+        newPhotoPreviews.forEach(({ file }) => {
+          formData.append("files", file)
         })
-        uploadedPhotos = await Promise.all(uploadPromises)
+        const res = await fetch("/api/upload", { method: "POST", body: formData })
+        uploadedPhotos = await res.json()
         setIsUploading(false)
       }
 
@@ -86,7 +78,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
       await fetch(`/api/posts/${post.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description, date, photos: allPhotos }),
+        body: JSON.stringify({ title, description, date, photos: allPhotos }),
       })
 
       // Clean up previews
@@ -104,7 +96,6 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
   }
 
   const totalPhotos = photos.length + newPhotoPreviews.length
-  const canAddMore = totalPhotos < 9
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -115,7 +106,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Photos ({totalPhotos}/9)</Label>
+            <Label>Photos ({totalPhotos})</Label>
             <div className="grid grid-cols-3 gap-2">
               {/* Existing photos */}
               {photos.map((photo, index) => (
@@ -157,15 +148,13 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
               ))}
 
               {/* Add photo button */}
-              {canAddMore && (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors"
-                >
-                  <Plus className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Add</span>
-                </button>
-              )}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors"
+              >
+                <Plus className="h-6 w-6 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Add</span>
+              </button>
             </div>
             <input
               ref={fileInputRef}
@@ -174,6 +163,16 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
               multiple
               onChange={handleAddPhotos}
               className="hidden"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Give your moment a title"
             />
           </div>
 

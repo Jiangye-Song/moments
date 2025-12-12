@@ -18,6 +18,7 @@ interface CreatePostFormProps {
 
 export function CreatePostForm({ onCreated }: CreatePostFormProps) {
   const [photos, setPhotos] = useState<{ id: string; url: string; file?: File }[]>([])
+  const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"))
   const [isUploading, setIsUploading] = useState(false)
@@ -34,7 +35,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
       url: URL.createObjectURL(file),
       file,
     }))
-    setPhotos((prev) => [...prev, ...newPhotos].slice(0, 9))
+    setPhotos((prev) => [...prev, ...newPhotos])
   }
 
   const removePhoto = (id: string) => {
@@ -72,6 +73,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           photos: uploadedPhotos,
+          title,
           description,
           date,
         }),
@@ -79,6 +81,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
 
       // Reset form
       setPhotos([])
+      setTitle("")
       setDescription("")
       setDate(format(new Date(), "yyyy-MM-dd"))
       setSuccess(true)
@@ -99,6 +102,17 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
         <CardDescription>Add a new moment to your feed</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Title */}
+        <div className="space-y-2">
+          <Label htmlFor="title">Title</Label>
+          <Input
+            id="title"
+            placeholder="Give your moment a title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+
         {/* Description */}
         <div className="space-y-2">
           <Label htmlFor="description">Description</Label>
@@ -145,17 +159,15 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
               </div>
             ))}
 
-            {photos.length < 9 && (
-              <button
+            <button
                 onClick={() => fileInputRef.current?.click()}
                 className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center gap-1 hover:border-muted-foreground/50 transition-colors"
               >
                 <ImagePlus className="h-6 w-6 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">Add</span>
               </button>
-            )}
           </div>
-          <p className="text-xs text-muted-foreground">{photos.length}/9 photos</p>
+          <p className="text-xs text-muted-foreground">{photos.length} photo{photos.length !== 1 ? 's' : ''}</p>
         </div>
 
         <Button onClick={handleSubmit} disabled={photos.length === 0 || isSubmitting} className="w-full">

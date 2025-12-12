@@ -9,6 +9,7 @@ export const profile = pgTable("profile", {
 
 export const posts = pgTable("posts", {
   id: uuid("id").defaultRandom().primaryKey(),
+  title: text("title").notNull().default(""),
   description: text("description").notNull(),
   date: text("date").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
