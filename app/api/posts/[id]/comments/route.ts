@@ -35,13 +35,13 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const { commentId, replyText } = await request.json()
+    const { commentId, replyText, replyUsername } = await request.json()
 
-    if (!commentId || !replyText) {
-      return NextResponse.json({ error: "Comment ID and reply text required" }, { status: 400 })
+    if (!commentId || !replyText || !replyUsername) {
+      return NextResponse.json({ error: "Comment ID, reply text, and username required" }, { status: 400 })
     }
 
-    const success = await replyToComment(id, commentId, replyText)
+    const success = await replyToComment(id, commentId, replyText, replyUsername)
     return NextResponse.json({ success })
   } catch (error) {
     return NextResponse.json({ error: "Failed to reply to comment" }, { status: 500 })

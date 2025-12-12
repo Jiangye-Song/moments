@@ -1,22 +1,82 @@
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import Image from "next/image"
+import useSWRInfinite from "swr/infinite"
 import useSWR from "swr"
-import { Camera, User } from "lucide-react"
+import { Camera, User, Loader2, Search, X, WifiOff, RefreshCw } from "lucide-react"
 import { format } from "date-fns"
-import type { Post, ProfileSettings } from "@/types"
+import type { Post, ProfileSettings, PaginatedPosts } from "@/types"
 import { PostCard } from "./post-card"
+import { MomentsFeedSkeleton } from "./post-card-skeleton"
 import { UsernameDialog } from "./username-dialog"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Toaster } from "sonner"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
+const PAGE_SIZE = 10
+
 export function MomentsFeed() {
-  const { data: posts, isLoading, mutate } = useSWR<Post[]>("/api/posts", fetcher)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [activeSearch, setActiveSearch] = useState("")
+  const [activeHashtag, setActiveHashtag] = useState("")
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  
+  const getKey = useCallback((pageIndex: number, previousPageData: PaginatedPosts | null) => {
+    if (previousPageData && !previousPageData.nextCursor) return null
+    
+    let url = `/api/posts?limit=${PAGE_SIZE}`
+    if (activeSearch) url += `&search=${encodeURIComponent(activeSearch)}`
+    if (activeHashtag) url += `&hashtag=${encodeURIComponent(activeHashtag)}`
+    
+    if (pageIndex === 0) return url
+    return `${url}&cursor=${previousPageData?.nextCursor}`
+  }, [activeSearch, activeHashtag])
+
+  const { 
+    data: pages, 
+    error,
+    isLoading, 
+    isValidating,
+    mutate, 
+    size, 
+    setSize 
+  } = useSWRInfinite<PaginatedPosts>(getKey, fetcher)
+  
   const { data: profile } = useSWR<ProfileSettings>("/api/profile", fetcher)
   const [usernameDialogOpen, setUsernameDialogOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+
+  // Flatten all pages into a single posts array
+  const posts = useMemo(() => {
+    if (!pages) return []
+    return pages.flatMap(page => page.posts)
+  }, [pages])
+
+  const isLoadingMore = isLoading || (size > 0 && pages && typeof pages[size - 1] === "undefined")
+  const isEmpty = !pages?.[0]?.posts?.length
+  const isReachingEnd = isEmpty || (pages && !pages[pages.length - 1]?.nextCursor)
+  const hasNetworkError = !!error && !isLoading
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (!loadMoreRef.current) return
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore && !isReachingEnd) {
+          setSize(size + 1)
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(loadMoreRef.current)
+    return () => observer.disconnect()
+  }, [isLoadingMore, isReachingEnd, setSize, size])
 
   const handleRequestUsername = useCallback((callback: () => void) => {
     setPendingAction(() => callback)
@@ -34,6 +94,28 @@ export function MomentsFeed() {
   const handleUsernameCancel = () => {
     setUsernameDialogOpen(false)
     setPendingAction(null)
+  }
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setActiveSearch(searchQuery)
+    setActiveHashtag("")
+    setSize(1)
+  }
+
+  const handleHashtagClick = (hashtag: string) => {
+    setActiveHashtag(hashtag)
+    setActiveSearch("")
+    setSearchQuery("")
+    setIsSearchOpen(true)
+    setSize(1)
+  }
+
+  const clearSearch = () => {
+    setSearchQuery("")
+    setActiveSearch("")
+    setActiveHashtag("")
+    setSize(1)
   }
 
   // Group posts by year and month for timeline
@@ -78,61 +160,156 @@ export function MomentsFeed() {
 
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <h1 className="text-lg font-semibold text-foreground">Moments</h1>
+          <div className="flex items-center gap-2">
+            {isSearchOpen ? (
+              <form onSubmit={handleSearch} className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  placeholder="Search posts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-40 sm:w-56 h-8 text-sm"
+                  autoFocus
+                />
+                <Button type="submit" size="sm" variant="ghost" className="h-8 px-2">
+                  <Search className="h-4 w-4" />
+                </Button>
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-8 px-2"
+                  onClick={() => {
+                    setIsSearchOpen(false)
+                    clearSearch()
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </form>
+            ) : (
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-8 px-2"
+                onClick={() => setIsSearchOpen(true)}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
+        
+        {/* Active filter indicator */}
+        {(activeSearch || activeHashtag) && (
+          <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-2 border-t border-border/50">
+            <span className="text-xs text-muted-foreground">Filtering by:</span>
+            {activeSearch && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs">
+                "{activeSearch}"
+                <button onClick={clearSearch} className="hover:text-primary/70">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+            {activeHashtag && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs">
+                #{activeHashtag}
+                <button onClick={clearSearch} className="hover:text-primary/70">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
       </header>
 
       {/* Cover photo area */}
-      <div className="relative h-72 bg-gradient-to-b from-primary/20 to-background overflow-hidden">
+      <div className="relative h-72 bg-gradient-to-b from-[#E0E2E0] to-white overflow-hidden">
         {profile?.bannerUrl && (
-          <Image src={profile.bannerUrl || "/placeholder.svg"} alt="Banner" fill className="object-cover" />
+          <Image src={profile.bannerUrl || "/epty_banner.png"} alt="Banner" fill className="object-cover" />
         )}
         <div className="absolute bottom-4 right-4 flex items-center gap-3">
-          <span className="text-foreground font-semibold text-lg drop-shadow-sm">{profile?.name || "My Album"}</span>
-          <div className="h-16 w-16 rounded-lg bg-primary/20 border-2 border-background flex items-center justify-center shadow-lg overflow-hidden">
+          <span className="text-foreground font-semibold text-lg text-shadow-lg/30 text-shadow-white">{profile?.name || " "}</span>
+          <div className="h-16 w-16 rounded-lg border-2 border-background flex items-center justify-center shadow-lg overflow-hidden">
             {profile?.avatarUrl ? (
               <Image
-                src={profile.avatarUrl || "/placeholder.svg"}
+                src={profile.avatarUrl || "/epty_user.png"}
                 alt={profile.name || "Avatar"}
                 width={64}
                 height={64}
                 className="object-cover w-full h-full"
               />
             ) : (
-              <User className="h-8 w-8 text-primary" />
+              <User className="h-8 w-8" />
             )}
           </div>
         </div>
       </div>
 
       {/* Feed */}
-      <main className="max-w-lg mx-auto px-4 pb-20">
-        {isLoading && <div className="py-12 text-center text-muted-foreground">Loading moments...</div>}
+      <main className="max-w-3xl mx-auto px-4 pb-20">
+        {/* Network Error */}
+        {hasNetworkError && (
+          <div className="py-12 text-center">
+            <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+              <WifiOff className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-medium text-foreground mb-1">Connection Error</h3>
+            <p className="text-muted-foreground text-sm mb-4">Please check your internet connection</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => mutate()}
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </Button>
+          </div>
+        )}
 
-        {posts && posts.length === 0 && (
+        {isLoading && <MomentsFeedSkeleton />}
+
+        {!isLoading && !hasNetworkError && posts.length === 0 && (
           <div className="py-12 text-center">
             <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
               <Camera className="h-10 w-10 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-1">No moments yet</h3>
-            <p className="text-muted-foreground text-sm">Check back soon for new updates</p>
+            {activeSearch || activeHashtag ? (
+              <>
+                <h3 className="text-lg font-medium text-foreground mb-1">No results found</h3>
+                <p className="text-muted-foreground text-sm mb-4">
+                  {activeSearch ? `No posts matching "${activeSearch}"` : `No posts with #${activeHashtag}`}
+                </p>
+                <Button variant="outline" size="sm" onClick={clearSearch}>
+                  Clear filter
+                </Button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-medium text-foreground mb-1">No moments yet</h3>
+                <p className="text-muted-foreground text-sm">Check back soon for new updates</p>
+              </>
+            )}
           </div>
         )}
 
-        {posts && posts.length > 0 && (
+        {posts.length > 0 && (
           <div>
             {groupedPosts.map((group, groupIndex) => (
               <div key={`${group.year}-${group.month}`} className="flex">
                 {/* Timeline */}
-                <div className="flex-shrink-0 w-16 pr-4 text-right">
+                <div className="flex-shrink-0 w-12 sm:w-16 md:w-20 pr-2 mr-[3vw] sm:pr-4 md:pr-6 text-left">
                   {group.showYear && (
-                    <div className="text-2xl font-bold text-foreground leading-tight">
+                    <div className="text-lg sm:text-2xl md:text-3xl font-bold text-foreground leading-tight">
                       {group.year}
                     </div>
                   )}
                   {group.showMonth && (
-                    <div className={`text-lg font-semibold text-muted-foreground ${group.showYear ? '' : 'mt-4'}`}>
+                    <div className={`text-sm sm:text-lg md:text-xl font-semibold text-muted-foreground ${group.showYear ? '' : 'mt-2 sm:mt-4'}`}>
                       {group.monthName}
                     </div>
                   )}
@@ -140,11 +317,11 @@ export function MomentsFeed() {
                 
                 {/* Timeline line */}
                 <div className="flex-shrink-0 w-px bg-border relative">
-                  <div className="absolute top-6 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary" />
+                  <div className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary" />
                 </div>
                 
                 {/* Posts */}
-                <div className="flex-1 pl-4">
+                <div className="flex-1 pl-2 sm:pl-4 md:pl-6">
                   {group.posts.map((post) => (
                     <PostCard
                       key={post.id}
@@ -152,11 +329,25 @@ export function MomentsFeed() {
                       profile={profile}
                       onRequestUsername={handleRequestUsername}
                       onUpdate={() => mutate()}
+                      onHashtagClick={handleHashtagClick}
                     />
                   ))}
                 </div>
               </div>
             ))}
+            
+            {/* Load more trigger */}
+            <div ref={loadMoreRef} className="py-8 text-center">
+              {isLoadingMore && !isReachingEnd && (
+                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Loading more...</span>
+                </div>
+              )}
+              {isReachingEnd && posts.length > 0 && (
+                <p className="text-sm text-muted-foreground">You've reached the end</p>
+              )}
+            </div>
           </div>
         )}
       </main>

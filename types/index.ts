@@ -10,8 +10,9 @@ export interface Comment {
   username: string
   text: string
   createdAt: string
-  // Admin reply to comment
+  // Reply to comment (can be from anyone)
   reply?: {
+    username: string
     text: string
     createdAt: string
   }
@@ -26,10 +27,16 @@ export interface Post {
   createdAt: string
   likes: string[] // Array of usernames who liked
   comments: Comment[]
+  hashtags: string[] // Array of hashtags extracted from description
 }
 
 export interface PostsData {
   posts: Post[]
+}
+
+export interface PaginatedPosts {
+  posts: Post[]
+  nextCursor: string | null
 }
 
 export interface ProfileSettings {

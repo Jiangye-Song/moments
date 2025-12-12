@@ -8,15 +8,17 @@ import type { Post, ProfileSettings } from "@/types"
 import { PhotoGrid } from "./photo-grid"
 import { PhotoViewer } from "./photo-viewer"
 import { PostInteractions } from "./post-interactions"
+import { HashtagText } from "./hashtag-text"
 
 interface PostCardProps {
   post: Post
   profile?: ProfileSettings
   onRequestUsername: (callback: () => void) => void
   onUpdate: () => void
+  onHashtagClick?: (hashtag: string) => void
 }
 
-export function PostCard({ post, profile, onRequestUsername, onUpdate }: PostCardProps) {
+export function PostCard({ post, profile, onRequestUsername, onUpdate, onHashtagClick }: PostCardProps) {
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
 
@@ -57,7 +59,9 @@ export function PostCard({ post, profile, onRequestUsername, onUpdate }: PostCar
 
           {/* Description */}
           {post.description && (
-            <p className="text-foreground text-sm mb-3 whitespace-pre-wrap leading-relaxed">{post.description}</p>
+            <p className="text-foreground text-sm mb-3 whitespace-pre-wrap leading-relaxed">
+              <HashtagText text={post.description} onHashtagClick={onHashtagClick} />
+            </p>
           )}
 
           {/* Photos */}

@@ -1,13 +1,20 @@
 import { put, del } from "@vercel/blob"
 import { db } from "./db"
 import { posts, comments, profile } from "./schema"
-import { eq, desc } from "drizzle-orm"
+import { eq, desc, ilike, or, sql } from "drizzle-orm"
 import type { Post, ProfileSettings, Comment } from "@/types"
 
 const DEFAULT_PROFILE: ProfileSettings = {
   name: "My Moments",
   avatarUrl: null,
   bannerUrl: null,
+}
+
+// Extract hashtags from text
+export function extractHashtags(text: string): string[] {
+  const hashtagRegex = /#[\w\u4e00-\u9fff]+/g
+  const matches = text.match(hashtagRegex) || []
+  return [...new Set(matches.map(tag => tag.toLowerCase()))]
 }
 
 // Helper to ensure JSONB fields are properly parsed as arrays
@@ -25,11 +32,43 @@ function parseJsonArray<T>(value: T[] | string | null | undefined, defaultValue:
   return defaultValue
 }
 
-export async function getPosts(): Promise<Post[]> {
-  const dbPosts = await db.select().from(posts).orderBy(desc(posts.createdAt))
+export async function getPosts(options?: { limit?: number; cursor?: string; search?: string; hashtag?: string }): Promise<{ posts: Post[]; nextCursor: string | null }> {
+  const limit = options?.limit || 10
+  const cursor = options?.cursor
+  const search = options?.search?.toLowerCase()
+  const hashtag = options?.hashtag?.toLowerCase()
+  
+  let dbPosts = await db.select().from(posts).orderBy(desc(posts.createdAt)).limit(100) // Get more for filtering
+  
+  // Filter by cursor
+  if (cursor) {
+    const cursorDate = new Date(cursor)
+    dbPosts = dbPosts.filter(post => post.createdAt < cursorDate)
+  }
+  
+  // Filter by search query (searches in title and description)
+  if (search) {
+    dbPosts = dbPosts.filter(post => 
+      post.title.toLowerCase().includes(search) ||
+      post.description.toLowerCase().includes(search)
+    )
+  }
+  
+  // Filter by hashtag
+  if (hashtag) {
+    const searchTag = hashtag.startsWith('#') ? hashtag : `#${hashtag}`
+    dbPosts = dbPosts.filter(post => {
+      const postHashtags = parseJsonArray<string>(post.hashtags)
+      return postHashtags.some(tag => tag === searchTag)
+    })
+  }
+  
+  // Take only the requested limit
+  const hasMore = dbPosts.length > limit
+  const postsToReturn = dbPosts.slice(0, limit)
   
   const result: Post[] = await Promise.all(
-    dbPosts.map(async (post) => {
+    postsToReturn.map(async (post) => {
       const postComments = await db.select().from(comments).where(eq(comments.postId, post.id))
       return {
         id: post.id,
@@ -39,20 +78,25 @@ export async function getPosts(): Promise<Post[]> {
         date: post.date,
         createdAt: post.createdAt.toISOString(),
         likes: parseJsonArray(post.likes),
+        hashtags: parseJsonArray(post.hashtags),
         comments: postComments.map((c) => ({
           id: c.id,
           username: c.username,
           text: c.text,
           createdAt: c.createdAt.toISOString(),
           reply: c.replyText
-            ? { text: c.replyText, createdAt: c.replyCreatedAt?.toISOString() || "" }
+            ? { username: c.replyUsername || "Admin", text: c.replyText, createdAt: c.replyCreatedAt?.toISOString() || "" }
             : undefined,
         })),
       }
     })
   )
   
-  return result
+  const nextCursor = hasMore && postsToReturn.length > 0 
+    ? postsToReturn[postsToReturn.length - 1].createdAt.toISOString()
+    : null
+  
+  return { posts: result, nextCursor }
 }
 
 export async function getProfile(): Promise<ProfileSettings> {
@@ -113,13 +157,16 @@ export async function updateProfile(profileData: Partial<ProfileSettings>): Prom
   }
 }
 
-export async function addPost(post: Omit<Post, "id" | "createdAt" | "likes" | "comments">): Promise<Post> {
+export async function addPost(post: Omit<Post, "id" | "createdAt" | "likes" | "comments" | "hashtags">): Promise<Post> {
+  const hashtags = extractHashtags(post.description)
+  
   const [newPost] = await db.insert(posts).values({
     title: post.title,
     description: post.description,
     date: post.date,
     photos: post.photos,
     likes: [],
+    hashtags,
   }).returning()
   
   return {
@@ -130,6 +177,7 @@ export async function addPost(post: Omit<Post, "id" | "createdAt" | "likes" | "c
     date: newPost.date,
     createdAt: newPost.createdAt.toISOString(),
     likes: parseJsonArray(newPost.likes),
+    hashtags: parseJsonArray(newPost.hashtags),
     comments: [],
   }
 }
@@ -159,12 +207,16 @@ export async function updatePost(
     }
   }
   
+  // Extract hashtags if description is updated
+  const hashtags = updates.description ? extractHashtags(updates.description) : undefined
+  
   const [updatedPost] = await db.update(posts)
     .set({
       ...(updates.title !== undefined && { title: updates.title }),
       ...(updates.description !== undefined && { description: updates.description }),
       ...(updates.date !== undefined && { date: updates.date }),
       ...(updates.photos !== undefined && { photos: updates.photos }),
+      ...(hashtags !== undefined && { hashtags }),
     })
     .where(eq(posts.id, postId))
     .returning()
@@ -179,13 +231,14 @@ export async function updatePost(
     date: updatedPost.date,
     createdAt: updatedPost.createdAt.toISOString(),
     likes: parseJsonArray(updatedPost.likes),
+    hashtags: parseJsonArray(updatedPost.hashtags),
     comments: postComments.map((c) => ({
       id: c.id,
       username: c.username,
       text: c.text,
       createdAt: c.createdAt.toISOString(),
       reply: c.replyText
-        ? { text: c.replyText, createdAt: c.replyCreatedAt?.toISOString() || "" }
+        ? { username: c.replyUsername || "Admin", text: c.replyText, createdAt: c.replyCreatedAt?.toISOString() || "" }
         : undefined,
     })),
   }
@@ -253,7 +306,7 @@ export async function deleteComment(postId: string, commentId: string): Promise<
   return true
 }
 
-export async function replyToComment(postId: string, commentId: string, replyText: string): Promise<boolean> {
+export async function replyToComment(postId: string, commentId: string, replyText: string, replyUsername: string): Promise<boolean> {
   const existingPosts = await db.select().from(posts).where(eq(posts.id, postId))
   if (existingPosts.length === 0) return false
   
@@ -262,10 +315,26 @@ export async function replyToComment(postId: string, commentId: string, replyTex
   
   await db.update(comments)
     .set({
+      replyUsername,
       replyText,
       replyCreatedAt: new Date(),
     })
     .where(eq(comments.id, commentId))
+  
+  return true
+}
+
+export async function removeLike(postId: string, username: string): Promise<boolean> {
+  const existingPosts = await db.select().from(posts).where(eq(posts.id, postId))
+  if (existingPosts.length === 0) return false
+  
+  const post = existingPosts[0]
+  const likesArray = parseJsonArray(post.likes)
+  const newLikes = likesArray.filter(u => u !== username)
+  
+  await db.update(posts)
+    .set({ likes: newLikes })
+    .where(eq(posts.id, postId))
   
   return true
 }

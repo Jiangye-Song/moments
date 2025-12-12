@@ -1,14 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import { format } from "date-fns"
-import { Trash2, Edit, MessageSquare, ChevronDown, ChevronUp, Heart } from "lucide-react"
-import type { Post } from "@/types"
+import { Trash2, Edit, MessageSquare, ChevronDown, ChevronUp, Heart, Loader2 } from "lucide-react"
+import type { Post, ProfileSettings } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { EditPostDialog } from "./edit-post-dialog"
 import { CommentsManager } from "./comments-manager"
+import { LikesManager } from "./likes-manager"
+import { PostsManagerSkeleton } from "./posts-manager-skeleton"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,14 +24,37 @@ import {
 
 interface PostsManagerProps {
   posts: Post[]
+  profile?: ProfileSettings
   onUpdate: () => void
+  onLoadMore: () => void
+  isLoadingMore: boolean
+  isReachingEnd: boolean
+  isLoading: boolean
 }
 
-export function PostsManager({ posts, onUpdate }: PostsManagerProps) {
+export function PostsManager({ posts, onUpdate, onLoadMore, isLoadingMore, isReachingEnd, isLoading }: PostsManagerProps) {
   const [expandedPost, setExpandedPost] = useState<string | null>(null)
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [deletingPost, setDeletingPost] = useState<Post | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (!loadMoreRef.current) return
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore && !isReachingEnd) {
+          onLoadMore()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(loadMoreRef.current)
+    return () => observer.disconnect()
+  }, [isLoadingMore, isReachingEnd, onLoadMore])
 
   const handleDelete = async () => {
     if (!deletingPost) return
@@ -43,6 +68,10 @@ export function PostsManager({ posts, onUpdate }: PostsManagerProps) {
       setIsDeleting(false)
       setDeletingPost(null)
     }
+  }
+
+  if (isLoading) {
+    return <PostsManagerSkeleton />
   }
 
   if (posts.length === 0) {
@@ -128,6 +157,19 @@ export function PostsManager({ posts, onUpdate }: PostsManagerProps) {
       {editingPost && (
         <EditPostDialog post={editingPost} open={true} onClose={() => setEditingPost(null)} onUpdate={onUpdate} />
       )}
+
+      {/* Load more trigger */}
+      <div ref={loadMoreRef} className="py-4 text-center">
+        {isLoadingMore && !isReachingEnd && (
+          <div className="flex items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">Loading more...</span>
+          </div>
+        )}
+        {isReachingEnd && posts.length > 0 && (
+          <p className="text-sm text-muted-foreground">All posts loaded</p>
+        )}
+      </div>
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deletingPost} onOpenChange={() => setDeletingPost(null)}>

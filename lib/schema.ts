@@ -7,6 +7,12 @@ export const profile = pgTable("profile", {
   bannerUrl: text("banner_url"),
 })
 
+export const settings = pgTable("settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+})
+
 export const posts = pgTable("posts", {
   id: uuid("id").defaultRandom().primaryKey(),
   title: text("title").notNull().default(""),
@@ -15,6 +21,7 @@ export const posts = pgTable("posts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   photos: jsonb("photos").$type<{ id: string; url: string; width?: number; height?: number }[]>().notNull().default([]),
   likes: jsonb("likes").$type<string[]>().notNull().default([]),
+  hashtags: jsonb("hashtags").$type<string[]>().notNull().default([]),
 })
 
 export const comments = pgTable("comments", {
@@ -23,6 +30,7 @@ export const comments = pgTable("comments", {
   username: text("username").notNull(),
   text: text("text").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  replyUsername: text("reply_username"),
   replyText: text("reply_text"),
   replyCreatedAt: timestamp("reply_created_at"),
 })

@@ -50,7 +50,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
 
   if (photos.length === 3) {
     return (
-      <div className="grid grid-cols-3 gap-1 max-w-[280px]">
+      <div className="grid grid-cols-3 gap-1 max-w-[560px]">
         {photos.map((photo, index) => (
           <div
             key={photo.id}
@@ -87,7 +87,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-1 max-w-[280px]">
+      <div className="grid grid-cols-3 gap-[1vw] max-w-[560px]">
         {photos.slice(0, maxVisible).map((photo, index) => {
           const isLastVisible = index === maxVisible - 1 && hasMore
           

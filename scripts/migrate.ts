@@ -1,5 +1,8 @@
-import "dotenv/config"
+import { config } from "dotenv"
 import { neon } from "@neondatabase/serverless"
+
+// Load .env.local for local development
+config({ path: ".env.local" })
 
 const DATABASE_URL = process.env.DATABASE_URL!
 
@@ -39,6 +42,12 @@ async function migrate() {
   `
   console.log("✓ Title column ensured")
   
+  // Add hashtags column if it doesn't exist
+  await sql`
+    ALTER TABLE posts ADD COLUMN IF NOT EXISTS hashtags JSONB NOT NULL DEFAULT '[]'
+  `
+  console.log("✓ Hashtags column ensured")
+  
   // Create comments table
   await sql`
     CREATE TABLE IF NOT EXISTS comments (
@@ -58,6 +67,22 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id)
   `
   console.log("✓ Index on comments created")
+  
+  // Create settings table for storing admin passcode hash
+  await sql`
+    CREATE TABLE IF NOT EXISTS settings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      key TEXT NOT NULL UNIQUE,
+      value TEXT NOT NULL
+    )
+  `
+  console.log("✓ Settings table created")
+  
+  // Add reply_username column if it doesn't exist
+  await sql`
+    ALTER TABLE comments ADD COLUMN IF NOT EXISTS reply_username TEXT
+  `
+  console.log("✓ Reply username column ensured")
   
   console.log("\n✅ All migrations completed successfully!")
 }

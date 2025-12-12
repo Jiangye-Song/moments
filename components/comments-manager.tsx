@@ -3,16 +3,17 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import { Trash2, Reply, Loader2 } from "lucide-react"
-import type { Post } from "@/types"
+import type { Post, ProfileSettings } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 interface CommentsManagerProps {
   post: Post
+  profile?: ProfileSettings
   onUpdate: () => void
 }
 
-export function CommentsManager({ post, onUpdate }: CommentsManagerProps) {
+export function CommentsManager({ post, profile, onUpdate }: CommentsManagerProps) {
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyText, setReplyText] = useState("")
   const [isReplying, setIsReplying] = useState(false)
@@ -25,7 +26,11 @@ export function CommentsManager({ post, onUpdate }: CommentsManagerProps) {
       await fetch(`/api/posts/${post.id}/comments`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commentId, replyText }),
+        body: JSON.stringify({ 
+          commentId, 
+          replyText,
+          replyUsername: profile?.name || "Admin"
+        }),
       })
       setReplyingTo(null)
       setReplyText("")
@@ -103,7 +108,7 @@ export function CommentsManager({ post, onUpdate }: CommentsManagerProps) {
           {comment.reply && (
             <div className="ml-6 p-3 bg-primary/5 border-l-2 border-primary rounded-r-lg">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-medium text-primary">Admin Reply</span>
+                <span className="text-sm font-medium text-primary">{comment.reply.username}</span>
                 <span className="text-xs text-muted-foreground">
                   {format(new Date(comment.reply.createdAt), "MMM d, h:mm a")}
                 </span>

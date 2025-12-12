@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server"
 import { getPosts, addPost } from "@/lib/posts"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const posts = await getPosts()
-    return NextResponse.json(posts)
+    const { searchParams } = new URL(request.url)
+    const limit = parseInt(searchParams.get("limit") || "10")
+    const cursor = searchParams.get("cursor") || undefined
+    const search = searchParams.get("search") || undefined
+    const hashtag = searchParams.get("hashtag") || undefined
+    
+    const result = await getPosts({ limit, cursor, search, hashtag })
+    return NextResponse.json(result)
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch posts" }, { status: 500 })
   }
