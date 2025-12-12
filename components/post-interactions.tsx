@@ -176,14 +176,27 @@ interface CommentItemProps {
 function CommentItem({ comment, postId, onRequestUsername, onUpdate }: CommentItemProps) {
   const [showReplyInput, setShowReplyInput] = useState(false)
   const [replyText, setReplyText] = useState("")
+  const [replyTo, setReplyTo] = useState<string | null>(null) // username being replied to
   const [isReplying, setIsReplying] = useState(false)
 
-  const handleReplyClick = () => {
+  const replies = comment.replies || []
+
+  const handleReplyClick = (targetUsername?: string) => {
     if (!hasUsername()) {
-      onRequestUsername(() => setShowReplyInput(true))
+      onRequestUsername(() => {
+        setReplyTo(targetUsername || null)
+        setShowReplyInput(true)
+      })
       return
     }
-    setShowReplyInput(!showReplyInput)
+    // If clicking the same reply button, toggle off
+    if (showReplyInput && replyTo === (targetUsername || null)) {
+      setShowReplyInput(false)
+      setReplyTo(null)
+    } else {
+      setReplyTo(targetUsername || null)
+      setShowReplyInput(true)
+    }
   }
 
   const handleReply = async () => {
@@ -203,11 +216,13 @@ function CommentItem({ comment, postId, onRequestUsername, onUpdate }: CommentIt
         body: JSON.stringify({ 
           commentId: comment.id, 
           replyText: replyText.trim(),
-          replyUsername: username
+          replyUsername: username,
+          replyTo: replyTo || undefined
         }),
       })
       setReplyText("")
       setShowReplyInput(false)
+      setReplyTo(null)
       onUpdate()
     } catch (error) {
       console.error("Reply failed:", error)
@@ -216,57 +231,93 @@ function CommentItem({ comment, postId, onRequestUsername, onUpdate }: CommentIt
     }
   }
 
+  const cancelReply = () => {
+    setShowReplyInput(false)
+    setReplyTo(null)
+    setReplyText("")
+  }
+
   return (
     <div className="space-y-1">
+      {/* Original Comment */}
       <div className="text-sm">
         <span className="font-medium text-primary">{comment.username}</span>
         <span className="text-foreground ml-1.5">{comment.text}</span>
       </div>
       <div className="flex items-center gap-2">
         <span className="text-xs text-muted-foreground">{format(new Date(comment.createdAt), "MMM d, h:mm a")}</span>
-        {!comment.reply && (
-          <button
-            onClick={handleReplyClick}
-            className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
-          >
-            <Reply className="h-3 w-3" />
-            Reply
-          </button>
-        )}
+        <button
+          onClick={() => handleReplyClick()}
+          className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 ml-auto"
+        >
+          <Reply className="h-3 w-3" />
+          Reply
+        </button>
       </div>
 
-      {/* Reply Input */}
-      {showReplyInput && !comment.reply && (
-        <div className="flex gap-2 mt-2 ml-4">
-          <Input
-            placeholder="Write a reply..."
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault()
-                handleReply()
-              }
-            }}
-            className="text-sm h-8"
-            autoFocus
-          />
-          <Button size="sm" onClick={handleReply} disabled={isReplying || !replyText.trim()}>
-            {isReplying ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-          </Button>
+      {/* Replies */}
+      {replies.length > 0 && (
+        <div className="ml-4 pl-3 border-l-2 border-primary/30 mt-2 space-y-2">
+          {replies.map((reply) => (
+            <div key={reply.id}>
+              <div className="text-sm">
+                <span className="font-medium text-primary">{reply.username}</span>
+                {reply.replyTo && (
+                  <span className="text-muted-foreground ml-1">
+                    ➜ <span className="font-medium">{reply.replyTo}</span>
+                  </span>
+                )}
+                <span className="text-foreground ml-1.5">{reply.text}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {format(new Date(reply.createdAt), "MMM d, h:mm a")}
+                </span>
+                <button
+                  onClick={() => handleReplyClick(reply.username)}
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 ml-auto"
+                >
+                  <Reply className="h-3 w-3" />
+                  Reply
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Reply */}
-      {comment.reply && (
-        <div className="ml-4 pl-3 border-l-2 border-primary/30 mt-2">
-          <div className="text-sm">
-            <span className="font-medium text-primary">{comment.reply.username}</span>
-            <span className="text-foreground ml-1.5">{comment.reply.text}</span>
+      {/* Reply Input */}
+      {showReplyInput && (
+        <div className="ml-4 mt-2 space-y-1">
+          {replyTo && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Replying to <span className="font-medium text-primary">{replyTo}</span></span>
+              <button onClick={cancelReply} className="text-muted-foreground hover:text-foreground">
+                ✕
+              </button>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Input
+              placeholder={replyTo ? `Reply to ${replyTo}...` : "Write a reply..."}
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault()
+                  handleReply()
+                }
+                if (e.key === "Escape") {
+                  cancelReply()
+                }
+              }}
+              className="text-sm h-8"
+              autoFocus
+            />
+            <Button size="sm" onClick={handleReply} disabled={isReplying || !replyText.trim()}>
+              {isReplying ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+            </Button>
           </div>
-          <span className="text-xs text-muted-foreground">
-            {format(new Date(comment.reply.createdAt), "MMM d, h:mm a")}
-          </span>
         </div>
       )}
     </div>

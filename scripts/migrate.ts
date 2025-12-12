@@ -84,6 +84,12 @@ async function migrate() {
   `
   console.log("✓ Reply username column ensured")
   
+  // Add replies JSONB column for multiple replies
+  await sql`
+    ALTER TABLE comments ADD COLUMN IF NOT EXISTS replies JSONB NOT NULL DEFAULT '[]'
+  `
+  console.log("✓ Replies column ensured")
+  
   console.log("\n✅ All migrations completed successfully!")
 }
 

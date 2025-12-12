@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { addComment, deleteComment, replyToComment } from "@/lib/posts"
+import { addComment, deleteComment, replyToComment, deleteReply } from "@/lib/posts"
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -23,25 +23,32 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const { commentId } = await request.json()
+    const { commentId, replyId } = await request.json()
 
-    const success = await deleteComment(id, commentId)
-    return NextResponse.json({ success })
+    if (replyId) {
+      // Delete a specific reply
+      const success = await deleteReply(id, commentId, replyId)
+      return NextResponse.json({ success })
+    } else {
+      // Delete the entire comment
+      const success = await deleteComment(id, commentId)
+      return NextResponse.json({ success })
+    }
   } catch (error) {
-    return NextResponse.json({ error: "Failed to delete comment" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to delete" }, { status: 500 })
   }
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const { commentId, replyText, replyUsername } = await request.json()
+    const { commentId, replyText, replyUsername, replyTo } = await request.json()
 
     if (!commentId || !replyText || !replyUsername) {
       return NextResponse.json({ error: "Comment ID, reply text, and username required" }, { status: 400 })
     }
 
-    const success = await replyToComment(id, commentId, replyText, replyUsername)
+    const success = await replyToComment(id, commentId, replyText, replyUsername, replyTo)
     return NextResponse.json({ success })
   } catch (error) {
     return NextResponse.json({ error: "Failed to reply to comment" }, { status: 500 })

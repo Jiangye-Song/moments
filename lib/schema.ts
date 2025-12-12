@@ -30,9 +30,7 @@ export const comments = pgTable("comments", {
   username: text("username").notNull(),
   text: text("text").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  replyUsername: text("reply_username"),
-  replyText: text("reply_text"),
-  replyCreatedAt: timestamp("reply_created_at"),
+  replies: jsonb("replies").$type<{ id: string; username: string; text: string; replyTo?: string; createdAt: string }[]>().notNull().default([]),
 })
 
 export type Post = typeof posts.$inferSelect

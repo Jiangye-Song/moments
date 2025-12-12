@@ -84,9 +84,7 @@ export async function getPosts(options?: { limit?: number; cursor?: string; sear
           username: c.username,
           text: c.text,
           createdAt: c.createdAt.toISOString(),
-          reply: c.replyText
-            ? { username: c.replyUsername || "Admin", text: c.replyText, createdAt: c.replyCreatedAt?.toISOString() || "" }
-            : undefined,
+          replies: parseJsonArray(c.replies),
         })),
       }
     })
@@ -237,9 +235,7 @@ export async function updatePost(
       username: c.username,
       text: c.text,
       createdAt: c.createdAt.toISOString(),
-      reply: c.replyText
-        ? { username: c.replyUsername || "Admin", text: c.replyText, createdAt: c.replyCreatedAt?.toISOString() || "" }
-        : undefined,
+      replies: parseJsonArray(c.replies),
     })),
   }
 }
@@ -295,6 +291,7 @@ export async function addComment(postId: string, username: string, text: string)
     username: newComment.username,
     text: newComment.text,
     createdAt: newComment.createdAt.toISOString(),
+    replies: [],
   }
 }
 
@@ -306,19 +303,52 @@ export async function deleteComment(postId: string, commentId: string): Promise<
   return true
 }
 
-export async function replyToComment(postId: string, commentId: string, replyText: string, replyUsername: string): Promise<boolean> {
+export async function replyToComment(
+  postId: string, 
+  commentId: string, 
+  replyText: string, 
+  replyUsername: string,
+  replyTo?: string  // username being replied to (when replying to another reply)
+): Promise<boolean> {
   const existingPosts = await db.select().from(posts).where(eq(posts.id, postId))
   if (existingPosts.length === 0) return false
   
   const existingComments = await db.select().from(comments).where(eq(comments.id, commentId))
   if (existingComments.length === 0) return false
   
+  const comment = existingComments[0]
+  const currentReplies = parseJsonArray(comment.replies)
+  
+  const newReply = {
+    id: crypto.randomUUID(),
+    username: replyUsername,
+    text: replyText,
+    replyTo,
+    createdAt: new Date().toISOString(),
+  }
+  
   await db.update(comments)
     .set({
-      replyUsername,
-      replyText,
-      replyCreatedAt: new Date(),
+      replies: [...currentReplies, newReply],
     })
+    .where(eq(comments.id, commentId))
+  
+  return true
+}
+
+export async function deleteReply(postId: string, commentId: string, replyId: string): Promise<boolean> {
+  const existingPosts = await db.select().from(posts).where(eq(posts.id, postId))
+  if (existingPosts.length === 0) return false
+  
+  const existingComments = await db.select().from(comments).where(eq(comments.id, commentId))
+  if (existingComments.length === 0) return false
+  
+  const comment = existingComments[0]
+  const currentReplies = parseJsonArray(comment.replies)
+  const newReplies = currentReplies.filter((r: { id: string }) => r.id !== replyId)
+  
+  await db.update(comments)
+    .set({ replies: newReplies })
     .where(eq(comments.id, commentId))
   
   return true

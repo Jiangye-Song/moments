@@ -5,17 +5,20 @@ export interface Photo {
   height?: number
 }
 
+export interface CommentReply {
+  id: string
+  username: string
+  text: string
+  replyTo?: string  // username being replied to (when replying to another reply)
+  createdAt: string
+}
+
 export interface Comment {
   id: string
   username: string
   text: string
   createdAt: string
-  // Reply to comment (can be from anyone)
-  reply?: {
-    username: string
-    text: string
-    createdAt: string
-  }
+  replies: CommentReply[]
 }
 
 export interface Post {
