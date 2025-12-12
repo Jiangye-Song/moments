@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Heart, MessageSquare, Loader2, Send } from "lucide-react"
+import { Heart, MessageSquare, Loader2, Send, Reply } from "lucide-react"
 import { format } from "date-fns"
 import type { Post, Comment } from "@/types"
 import { Button } from "@/components/ui/button"
@@ -130,7 +130,13 @@ export function PostInteractions({ post, onRequestUsername, onUpdate }: PostInte
         <div className="space-y-2 pt-2 border-t border-border/50">
           {/* Comments List - Always shown */}
           {comments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} />
+            <CommentItem 
+              key={comment.id} 
+              comment={comment} 
+              postId={post.id}
+              onRequestUsername={onRequestUsername}
+              onUpdate={onUpdate}
+            />
           ))}
 
           {/* Comment Input - Only when toggled */}
@@ -160,20 +166,102 @@ export function PostInteractions({ post, onRequestUsername, onUpdate }: PostInte
   )
 }
 
-function CommentItem({ comment }: { comment: Comment }) {
+interface CommentItemProps {
+  comment: Comment
+  postId: string
+  onRequestUsername: (callback: () => void) => void
+  onUpdate: () => void
+}
+
+function CommentItem({ comment, postId, onRequestUsername, onUpdate }: CommentItemProps) {
+  const [showReplyInput, setShowReplyInput] = useState(false)
+  const [replyText, setReplyText] = useState("")
+  const [isReplying, setIsReplying] = useState(false)
+
+  const handleReplyClick = () => {
+    if (!hasUsername()) {
+      onRequestUsername(() => setShowReplyInput(true))
+      return
+    }
+    setShowReplyInput(!showReplyInput)
+  }
+
+  const handleReply = async () => {
+    if (!hasUsername()) {
+      onRequestUsername(() => handleReply())
+      return
+    }
+
+    const username = getUsername()
+    if (!username || !replyText.trim()) return
+
+    setIsReplying(true)
+    try {
+      await fetch(`/api/posts/${postId}/comments`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          commentId: comment.id, 
+          replyText: replyText.trim(),
+          replyUsername: username
+        }),
+      })
+      setReplyText("")
+      setShowReplyInput(false)
+      onUpdate()
+    } catch (error) {
+      console.error("Reply failed:", error)
+    } finally {
+      setIsReplying(false)
+    }
+  }
+
   return (
     <div className="space-y-1">
       <div className="text-sm">
         <span className="font-medium text-primary">{comment.username}</span>
         <span className="text-foreground ml-1.5">{comment.text}</span>
       </div>
-      <span className="text-xs text-muted-foreground">{format(new Date(comment.createdAt), "MMM d, h:mm a")}</span>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">{format(new Date(comment.createdAt), "MMM d, h:mm a")}</span>
+        {!comment.reply && (
+          <button
+            onClick={handleReplyClick}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+          >
+            <Reply className="h-3 w-3" />
+            Reply
+          </button>
+        )}
+      </div>
 
-      {/* Admin Reply */}
+      {/* Reply Input */}
+      {showReplyInput && !comment.reply && (
+        <div className="flex gap-2 mt-2 ml-4">
+          <Input
+            placeholder="Write a reply..."
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                handleReply()
+              }
+            }}
+            className="text-sm h-8"
+            autoFocus
+          />
+          <Button size="sm" onClick={handleReply} disabled={isReplying || !replyText.trim()}>
+            {isReplying ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+          </Button>
+        </div>
+      )}
+
+      {/* Reply */}
       {comment.reply && (
         <div className="ml-4 pl-3 border-l-2 border-primary/30 mt-2">
           <div className="text-sm">
-            <span className="font-medium text-primary">Admin</span>
+            <span className="font-medium text-primary">{comment.reply.username}</span>
             <span className="text-foreground ml-1.5">{comment.reply.text}</span>
           </div>
           <span className="text-xs text-muted-foreground">

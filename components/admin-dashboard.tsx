@@ -149,6 +149,7 @@ export function AdminDashboard() {
           <TabsContent value="posts">
             <PostsManager 
               posts={posts} 
+              profile={profile}
               onUpdate={mutatePosts}
               onLoadMore={loadMore}
               isLoadingMore={!!isLoadingMore}

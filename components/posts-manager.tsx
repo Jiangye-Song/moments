@@ -32,7 +32,7 @@ interface PostsManagerProps {
   isLoading: boolean
 }
 
-export function PostsManager({ posts, onUpdate, onLoadMore, isLoadingMore, isReachingEnd, isLoading }: PostsManagerProps) {
+export function PostsManager({ posts, profile, onUpdate, onLoadMore, isLoadingMore, isReachingEnd, isLoading }: PostsManagerProps) {
   const [expandedPost, setExpandedPost] = useState<string | null>(null)
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [deletingPost, setDeletingPost] = useState<Post | null>(null)
@@ -143,10 +143,11 @@ export function PostsManager({ posts, onUpdate, onLoadMore, isLoadingMore, isRea
               </div>
             </div>
 
-            {/* Expanded Comments */}
+            {/* Expanded Comments & Likes */}
             {expandedPost === post.id && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <CommentsManager post={post} onUpdate={onUpdate} />
+              <div className="mt-4 pt-4 border-t border-border space-y-6">
+                <LikesManager post={post} onUpdate={onUpdate} />
+                <CommentsManager post={post} profile={profile} onUpdate={onUpdate} />
               </div>
             )}
           </CardContent>
