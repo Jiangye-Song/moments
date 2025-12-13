@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Toaster } from "sonner"
 import { useLanguage } from "@/lib/language-context"
+import { usePrimaryColor } from "@/lib/primary-color-context"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -22,6 +23,7 @@ const PAGE_SIZE = 10
 
 export function MomentsFeed() {
   const { t } = useLanguage()
+  const { extractFromImage, resetToDefault } = usePrimaryColor()
   const [searchQuery, setSearchQuery] = useState("")
   const [activeSearch, setActiveSearch] = useState("")
   const [activeHashtag, setActiveHashtag] = useState("")
@@ -63,6 +65,15 @@ export function MomentsFeed() {
   const isEmpty = !pages?.[0]?.posts?.length
   const isReachingEnd = isEmpty || (pages && !pages[pages.length - 1]?.nextCursor)
   const hasNetworkError = !!error && !isLoading
+
+  // Extract primary color from banner image
+  useEffect(() => {
+    if (profile?.bannerUrl) {
+      extractFromImage(profile.bannerUrl)
+    } else {
+      resetToDefault()
+    }
+  }, [profile?.bannerUrl, extractFromImage, resetToDefault])
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
