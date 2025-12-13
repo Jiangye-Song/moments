@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { uploadSingleFile } from "@/lib/upload"
 
 interface ProfileEditorProps {
   profile?: ProfileSettings
@@ -31,48 +32,13 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
 
     setUploading(true)
     try {
-      // Get presigned URL using GET with query params (avoids body size issues)
-      const params = new URLSearchParams({
-        name: file.name,
-        type: file.type,
-      })
-      const presignedRes = await fetch(`/api/upload?${params}`)
-
-      // Check for non-JSON error responses
-      const contentType = presignedRes.headers.get("content-type")
-      if (!contentType?.includes("application/json")) {
-        const text = await presignedRes.text()
-        console.error("Non-JSON response:", presignedRes.status, text)
-        throw new Error(`Server error (${presignedRes.status})`)
-      }
-
-      if (!presignedRes.ok) {
-        const error = await presignedRes.json()
-        throw new Error(error.error || "Failed to get upload URL")
-      }
-
-      const uploadInfo = await presignedRes.json()
+      const url = await uploadSingleFile(file)
       
-      if (!uploadInfo?.presignedUrl) {
-        throw new Error("Invalid upload URL received")
-      }
-
-      // Upload directly to B2 using presigned URL
-      const uploadRes = await fetch(uploadInfo.presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      })
-
-      if (!uploadRes.ok) {
-        const errorText = await uploadRes.text().catch(() => "Unknown error")
-        console.error("B2 upload failed:", uploadRes.status, errorText)
+      if (!url) {
         throw new Error("Upload failed")
       }
 
-      setUrl(uploadInfo.publicUrl)
+      setUrl(url)
     } catch (error) {
       console.error("Upload failed:", error)
       toast.error(error instanceof Error ? error.message : "Upload failed")

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Photo } from "@/types"
+import { uploadPhotos } from "@/lib/upload"
 
 interface CreatePostFormProps {
   onCreated: () => void
@@ -56,69 +57,13 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
     setIsUploading(true)
     
     try {
-      const photosToUpload = photos.filter((p) => p.file)
+      const files = photos.map((p) => p.file).filter((f): f is File => !!f)
       
-      if (photosToUpload.length === 0) {
+      if (files.length === 0) {
         throw new Error("No valid photos to upload")
       }
       
-      const uploadedPhotos: Photo[] = []
-      const failedUploads: string[] = []
-
-      // Upload each file one at a time (request presigned URL via GET, then upload)
-      for (let i = 0; i < photosToUpload.length; i++) {
-        const photo = photosToUpload[i]
-        if (!photo.file) continue
-
-        console.log(`[Upload ${i + 1}/${photosToUpload.length}] Starting upload for: ${photo.file.name}`)
-
-        try {
-          // Get presigned URL using GET with query params
-          const params = new URLSearchParams({
-            name: photo.file.name,
-            type: photo.file.type,
-          })
-          const presignedRes = await fetch(`/api/upload?${params}`)
-
-          if (!presignedRes.ok) {
-            const contentType = presignedRes.headers.get("content-type")
-            if (contentType?.includes("application/json")) {
-              const error = await presignedRes.json()
-              throw new Error(error.error || `Failed to get upload URL (${presignedRes.status})`)
-            } else {
-              const text = await presignedRes.text()
-              throw new Error(`Server error (${presignedRes.status}): ${text.slice(0, 50)}`)
-            }
-          }
-
-          const uploadInfo = await presignedRes.json()
-          
-          if (!uploadInfo?.presignedUrl) {
-            throw new Error("Invalid upload URL received")
-          }
-
-          // Upload to B2 using presigned URL
-          const uploadRes = await fetch(uploadInfo.presignedUrl, {
-            method: "PUT",
-            body: photo.file,
-            headers: {
-              "Content-Type": photo.file.type,
-            },
-          })
-
-          if (!uploadRes.ok) {
-            throw new Error(`B2 upload failed with status ${uploadRes.status}`)
-          }
-
-          uploadedPhotos.push({
-            id: crypto.randomUUID(),
-            url: uploadInfo.publicUrl,
-          })
-        } catch (uploadError) {
-          console.error(`Upload error for ${photo.file.name}:`, uploadError)
-          failedUploads.push(photo.file.name)
-        }
-      }
+      const { uploadedPhotos, failedUploads } = await uploadPhotos(files)
 
       setIsUploading(false)
 

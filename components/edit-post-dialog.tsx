@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { uploadPhotos } from "@/lib/upload"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB per file
 
@@ -76,64 +77,12 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
         setIsUploading(true)
         setUploadProgress(0)
         
-        const failedUploads: string[] = []
-
-        // Upload each file one at a time (request presigned URL via GET, then upload)
-        for (let i = 0; i < newPhotoPreviews.length; i++) {
-          const { file } = newPhotoPreviews[i]
-
-          try {
-            // Get presigned URL using GET with query params (avoids body size issues)
-            const params = new URLSearchParams({
-              name: file.name,
-              type: file.type,
-            })
-            const presignedRes = await fetch(`/api/upload?${params}`)
-
-            if (!presignedRes.ok) {
-              const contentType = presignedRes.headers.get("content-type")
-              if (contentType?.includes("application/json")) {
-                const error = await presignedRes.json()
-                throw new Error(error.error || `Failed to get upload URL (${presignedRes.status})`)
-              } else {
-                const text = await presignedRes.text()
-                throw new Error(`Server error (${presignedRes.status}): ${text.slice(0, 50)}`)
-              }
-            }
-
-            const uploadInfo = await presignedRes.json()
-            
-            if (!uploadInfo?.presignedUrl) {
-              throw new Error("Invalid upload URL received")
-            }
-
-            // Upload to B2 using presigned URL
-            const uploadRes = await fetch(uploadInfo.presignedUrl, {
-              method: "PUT",
-              body: file,
-              headers: {
-                "Content-Type": file.type,
-              },
-            })
-
-            if (!uploadRes.ok) {
-              throw new Error(`B2 upload failed with status ${uploadRes.status}`)
-            }
-
-            uploadedPhotos.push({
-              id: crypto.randomUUID(),
-              url: uploadInfo.publicUrl,
-            })
-          } catch (uploadError) {
-            console.error(`Upload error for ${file.name}:`, uploadError)
-            failedUploads.push(file.name)
-          }
-
-          setUploadProgress(Math.round(((i + 1) / newPhotoPreviews.length) * 100))
-        }
+        const files = newPhotoPreviews.map((p) => p.file)
+        const result = await uploadPhotos(files, setUploadProgress)
+        uploadedPhotos = result.uploadedPhotos
         
-        if (failedUploads.length > 0) {
-          toast.warning(`${failedUploads.length} file(s) failed to upload: ${failedUploads.join(", ")}`)
+        if (result.failedUploads.length > 0) {
+          toast.warning(`${result.failedUploads.length} file(s) failed to upload: ${result.failedUploads.join(", ")}`)
         }
         
         setIsUploading(false)
