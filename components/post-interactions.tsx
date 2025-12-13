@@ -7,6 +7,7 @@ import type { Post, Comment } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { getUsername, hasUsername } from "@/lib/user"
+import { useLanguage } from "@/lib/language-context"
 import { toast } from "sonner"
 
 interface PostInteractionsProps {
@@ -17,6 +18,7 @@ interface PostInteractionsProps {
 }
 
 export function PostInteractions({ post, adminName, onRequestUsername, onUpdate }: PostInteractionsProps) {
+  const { t } = useLanguage()
   const [showCommentInput, setShowCommentInput] = useState(false)
   const [commentText, setCommentText] = useState("")
   const [isLiking, setIsLiking] = useState(false)
@@ -37,7 +39,7 @@ export function PostInteractions({ post, adminName, onRequestUsername, onUpdate 
     if (!username) return
 
     if (hasLiked) {
-      toast.info("You have already liked this post")
+      toast.info(t("alreadyLiked"))
       return
     }
 
@@ -50,7 +52,7 @@ export function PostInteractions({ post, adminName, onRequestUsername, onUpdate 
       })
       const result = await res.json()
       if (result.alreadyLiked) {
-        toast.info("You have already liked this post")
+        toast.info(t("alreadyLiked"))
       }
       onUpdate()
     } catch (error) {
@@ -108,14 +110,14 @@ export function PostInteractions({ post, adminName, onRequestUsername, onUpdate 
           ) : (
             <Heart className={`h-4 w-4 ${hasLiked ? "fill-primary text-primary" : ""}`} />
           )}
-          <span className="text-xs">{likes.length > 0 ? likes.length : "Like"}</span>
+          <span className="text-xs">{likes.length > 0 ? likes.length : t("like")}</span>
         </button>
         <button
           onClick={handleCommentClick}
           className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
         >
           <MessageSquare className="h-4 w-4" />
-          <span className="text-xs">{comments.length > 0 ? comments.length : "Comment"}</span>
+          <span className="text-xs">{comments.length > 0 ? comments.length : t("comment")}</span>
         </button>
       </div>
 
@@ -145,7 +147,7 @@ export function PostInteractions({ post, adminName, onRequestUsername, onUpdate 
           {showCommentInput && (
             <div className="flex gap-2 pt-1">
               <Input
-                placeholder="Write a comment..."
+                placeholder={t("writeComment")}
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 onKeyDown={(e) => {
@@ -177,6 +179,7 @@ interface CommentItemProps {
 }
 
 function CommentItem({ comment, postId, adminName, onRequestUsername, onUpdate }: CommentItemProps) {
+  const { t } = useLanguage()
   const [showReplyInput, setShowReplyInput] = useState(false)
   const [replyText, setReplyText] = useState("")
   const [replyTo, setReplyTo] = useState<string | null>(null) // username being replied to
@@ -255,7 +258,7 @@ function CommentItem({ comment, postId, adminName, onRequestUsername, onUpdate }
           className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 ml-auto"
         >
           <Reply className="h-3 w-3" />
-          Reply
+          {t("reply")}
         </button>
       </div>
 
@@ -282,7 +285,7 @@ function CommentItem({ comment, postId, adminName, onRequestUsername, onUpdate }
                   className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 ml-auto"
                 >
                   <Reply className="h-3 w-3" />
-                  Reply
+                  {t("reply")}
                 </button>
               </div>
             </div>
@@ -295,7 +298,7 @@ function CommentItem({ comment, postId, adminName, onRequestUsername, onUpdate }
         <div className="ml-4 mt-2 space-y-1">
           {replyTo && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>Replying to <span className="font-medium text-primary">{replyTo}</span></span>
+              <span>{t("replyingTo")} <span className="font-medium text-primary">{replyTo}</span></span>
               <button onClick={cancelReply} className="text-muted-foreground hover:text-foreground">
                 ✕
               </button>
@@ -303,7 +306,7 @@ function CommentItem({ comment, postId, adminName, onRequestUsername, onUpdate }
           )}
           <div className="flex gap-2">
             <Input
-              placeholder={replyTo ? `Reply to ${replyTo}...` : "Write a reply..."}
+              placeholder={replyTo ? `${t("replyTo")} ${replyTo}...` : t("writeReply")}
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               onKeyDown={(e) => {

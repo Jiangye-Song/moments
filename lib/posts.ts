@@ -377,3 +377,45 @@ export async function uploadPhoto(file: File): Promise<{ url: string }> {
   })
   return { url: blob.url }
 }
+
+export async function checkUsernameExists(username: string): Promise<boolean> {
+  const lowerUsername = username.toLowerCase()
+  
+  // Check in comments
+  const commentUsers = await db
+    .select({ username: comments.username })
+    .from(comments)
+    .limit(1000)
+  
+  for (const c of commentUsers) {
+    if (c.username.toLowerCase() === lowerUsername) {
+      return true
+    }
+  }
+  
+  // Check in post likes
+  const allPosts = await db.select({ likes: posts.likes }).from(posts).limit(1000)
+  
+  for (const p of allPosts) {
+    const likes = parseJsonArray<string>(p.likes)
+    for (const like of likes) {
+      if (like.toLowerCase() === lowerUsername) {
+        return true
+      }
+    }
+  }
+  
+  // Check in comment replies
+  const allComments = await db.select({ replies: comments.replies }).from(comments).limit(1000)
+  
+  for (const c of allComments) {
+    const replies = parseJsonArray<{ username: string }>(c.replies as { username: string }[])
+    for (const reply of replies) {
+      if (reply.username.toLowerCase() === lowerUsername) {
+        return true
+      }
+    }
+  }
+  
+  return false
+}

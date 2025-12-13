@@ -10,15 +10,18 @@ import type { Post, ProfileSettings, PaginatedPosts } from "@/types"
 import { PostCard } from "./post-card"
 import { MomentsFeedSkeleton } from "./post-card-skeleton"
 import { UsernameDialog } from "./username-dialog"
+import { LanguageSelector } from "./language-selector"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Toaster } from "sonner"
+import { useLanguage } from "@/lib/language-context"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 const PAGE_SIZE = 10
 
 export function MomentsFeed() {
+  const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState("")
   const [activeSearch, setActiveSearch] = useState("")
   const [activeHashtag, setActiveHashtag] = useState("")
@@ -161,13 +164,14 @@ export function MomentsFeed() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-foreground">Moments</h1>
+          <h1 className="text-lg font-semibold text-foreground">{t("moments")}</h1>
           <div className="flex items-center gap-2">
+            <LanguageSelector />
             {isSearchOpen ? (
               <form onSubmit={handleSearch} className="flex items-center gap-2">
                 <Input
                   type="text"
-                  placeholder="Search posts..."
+                  placeholder={t("searchPosts")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-40 sm:w-56 h-8 text-sm"
@@ -205,7 +209,7 @@ export function MomentsFeed() {
         {/* Active filter indicator */}
         {(activeSearch || activeHashtag) && (
           <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-2 border-t border-border/50">
-            <span className="text-xs text-muted-foreground">Filtering by:</span>
+            <span className="text-xs text-muted-foreground">{t("filteringBy")}</span>
             {activeSearch && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs">
                 "{activeSearch}"
@@ -257,8 +261,8 @@ export function MomentsFeed() {
             <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
               <WifiOff className="h-10 w-10 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-1">Connection Error</h3>
-            <p className="text-muted-foreground text-sm mb-4">Please check your internet connection</p>
+            <h3 className="text-lg font-medium text-foreground mb-1">{t("connectionError")}</h3>
+            <p className="text-muted-foreground text-sm mb-4">{t("checkInternet")}</p>
             <Button 
               variant="outline" 
               size="sm" 
@@ -266,7 +270,7 @@ export function MomentsFeed() {
               className="gap-2"
             >
               <RefreshCw className="h-4 w-4" />
-              Try Again
+              {t("tryAgain")}
             </Button>
           </div>
         )}
@@ -280,18 +284,18 @@ export function MomentsFeed() {
             </div>
             {activeSearch || activeHashtag ? (
               <>
-                <h3 className="text-lg font-medium text-foreground mb-1">No results found</h3>
+                <h3 className="text-lg font-medium text-foreground mb-1">{t("noResultsFound")}</h3>
                 <p className="text-muted-foreground text-sm mb-4">
-                  {activeSearch ? `No posts matching "${activeSearch}"` : `No posts with #${activeHashtag}`}
+                  {activeSearch ? `${t("noPostsMatching")} "${activeSearch}"` : `${t("noPostsWith")} #${activeHashtag}`}
                 </p>
                 <Button variant="outline" size="sm" onClick={clearSearch}>
-                  Clear filter
+                  {t("clearFilter")}
                 </Button>
               </>
             ) : (
               <>
-                <h3 className="text-lg font-medium text-foreground mb-1">No moments yet</h3>
-                <p className="text-muted-foreground text-sm">Check back soon for new updates</p>
+                <h3 className="text-lg font-medium text-foreground mb-1">{t("noMomentsYet")}</h3>
+                <p className="text-muted-foreground text-sm">{t("checkBackSoon")}</p>
               </>
             )}
           </div>
@@ -341,11 +345,11 @@ export function MomentsFeed() {
               {isLoadingMore && !isReachingEnd && (
                 <div className="flex items-center justify-center gap-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">Loading more...</span>
+                  <span className="text-sm">{t("loadingMore")}</span>
                 </div>
               )}
               {isReachingEnd && posts.length > 0 && (
-                <p className="text-sm text-muted-foreground">You've reached the end</p>
+                <p className="text-sm text-muted-foreground">{t("reachedEnd")}</p>
               )}
             </div>
           </div>
