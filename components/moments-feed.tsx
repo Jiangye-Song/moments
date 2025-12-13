@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import useSWRInfinite from "swr/infinite"
 import useSWR from "swr"
 import { Camera, User, Loader2, Search, X, WifiOff, RefreshCw, Construction } from "lucide-react"
@@ -30,10 +31,13 @@ const PAGE_SIZE = 10
 export function MomentsFeed() {
   const { t } = useLanguage()
   const { extractFromImage, resetToDefault } = usePrimaryColor()
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [activeSearch, setActiveSearch] = useState("")
   const [activeHashtag, setActiveHashtag] = useState("")
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [avatarClickCount, setAvatarClickCount] = useState(0)
+  const avatarClickTimer = useRef<NodeJS.Timeout | null>(null)
 
   const getKey = useCallback((pageIndex: number, previousPageData: PaginatedPosts | null) => {
     if (previousPageData && !previousPageData.nextCursor) return null
@@ -272,7 +276,26 @@ export function MomentsFeed() {
         )}
         <div className="absolute bottom-4 right-4 flex items-center gap-3">
           <span className="text-white font-semibold text-lg drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{profile?.name || " "}</span>
-          <div className="h-16 w-16 rounded-lg border-2 border-background flex items-center justify-center shadow-lg overflow-hidden">
+          <div
+            className="h-16 w-16 rounded-lg border-2 border-background flex items-center justify-center shadow-lg overflow-hidden cursor-default"
+            onClick={() => {
+              const newCount = avatarClickCount + 1
+              setAvatarClickCount(newCount)
+              
+              if (avatarClickTimer.current) {
+                clearTimeout(avatarClickTimer.current)
+              }
+              
+              if (newCount >= 3) {
+                setAvatarClickCount(0)
+                router.push("/admin")
+              } else {
+                avatarClickTimer.current = setTimeout(() => {
+                  setAvatarClickCount(0)
+                }, 1000)
+              }
+            }}
+          >
             {profile?.avatarUrl ? (
               <Image
                 src={profile.avatarUrl || "/epty_user.png"}

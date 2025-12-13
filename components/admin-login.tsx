@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Lock, Eye, EyeOff, Loader2 } from "lucide-react"
+import Link from "next/link"
+import { Lock, Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -63,6 +64,13 @@ export function AdminLogin({ isSetup, onSuccess }: AdminLoginProps) {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Link
+        href="/"
+        className="absolute top-4 left-4 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Home
+      </Link>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
