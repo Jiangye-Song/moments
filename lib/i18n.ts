@@ -73,7 +73,7 @@ export const translations = {
     
     // Maintenance
     "underMaintenance": "Under Maintenance",
-    "maintenanceMessage": "We're making some improvements. Please check back later!",
+    "maintenanceMessage": "Check back later!",
   },
   "zh-CN": {
     // Header
@@ -140,7 +140,7 @@ export const translations = {
     
     // Maintenance
     "underMaintenance": "维护中",
-    "maintenanceMessage": "我们正在进行一些改进，请稍后再来！",
+    "maintenanceMessage": "请稍后再来！",
   },
   "zh-TW": {
     // Header
@@ -207,7 +207,7 @@ export const translations = {
     
     // Maintenance
     "underMaintenance": "維護中",
-    "maintenanceMessage": "我們正在進行一些改進，請稍後再來！",
+    "maintenanceMessage": "請稍後再來！",
   },
   "ja": {
     // Header
@@ -274,7 +274,7 @@ export const translations = {
     
     // Maintenance
     "underMaintenance": "メンテナンス中",
-    "maintenanceMessage": "現在改善を行っています。後でまたお越しください！",
+    "maintenanceMessage": "後でまたお越しください！",
   },
 } as const
 
