@@ -4,12 +4,56 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { Language, translations, TranslationKey } from "./i18n"
 
 const LANGUAGE_COOKIE_NAME = "moments-language"
+const SUPPORTED_LANGUAGES: Language[] = ["en", "zh-CN", "zh-TW", "ja"]
 
-function getLanguageFromCookie(): Language {
-  if (typeof document === "undefined") return "en"
+function getLanguageFromCookie(): Language | null {
+  if (typeof document === "undefined") return null
   const match = document.cookie.match(new RegExp(`(^| )${LANGUAGE_COOKIE_NAME}=([^;]+)`))
   const lang = match?.[2] as Language | undefined
   if (lang && lang in translations) return lang
+  return null
+}
+
+function detectBrowserLanguage(): Language {
+  if (typeof navigator === "undefined") return "en"
+  
+  // Get browser languages (ordered by preference)
+  const browserLangs = navigator.languages || [navigator.language]
+  
+  for (const browserLang of browserLangs) {
+    const lang = browserLang.toLowerCase()
+    
+    // Exact match
+    if (SUPPORTED_LANGUAGES.includes(lang as Language)) {
+      return lang as Language
+    }
+    
+    // Match zh-CN variants (zh-cn, zh-hans, zh-sg)
+    if (lang === "zh-cn" || lang === "zh-hans" || lang.startsWith("zh-hans") || lang === "zh-sg") {
+      return "zh-CN"
+    }
+    
+    // Match zh-TW variants (zh-tw, zh-hant, zh-hk, zh-mo)
+    if (lang === "zh-tw" || lang === "zh-hant" || lang.startsWith("zh-hant") || lang === "zh-hk" || lang === "zh-mo") {
+      return "zh-TW"
+    }
+    
+    // Generic Chinese defaults to Simplified
+    if (lang === "zh") {
+      return "zh-CN"
+    }
+    
+    // Japanese
+    if (lang === "ja" || lang.startsWith("ja-")) {
+      return "ja"
+    }
+    
+    // English variants
+    if (lang === "en" || lang.startsWith("en-")) {
+      return "en"
+    }
+  }
+  
   return "en"
 }
 
@@ -30,7 +74,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setLanguageState(getLanguageFromCookie())
+    // First try to get from cookie
+    const cookieLang = getLanguageFromCookie()
+    if (cookieLang) {
+      setLanguageState(cookieLang)
+    } else {
+      // No cookie - detect browser language and save it
+      const detectedLang = detectBrowserLanguage()
+      setLanguageState(detectedLang)
+      setLanguageCookie(detectedLang)
+    }
     setMounted(true)
   }, [])
 

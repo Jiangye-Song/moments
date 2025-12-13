@@ -7,7 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "./ui/dropdown-menu"
 import { useLanguage } from "@/lib/language-context"
 import { Language, languageNames } from "@/lib/i18n"
 
