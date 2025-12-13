@@ -11,11 +11,12 @@ import { toast } from "sonner"
 
 interface PostInteractionsProps {
   post: Post
+  adminName?: string
   onRequestUsername: (callback: () => void) => void
   onUpdate: () => void
 }
 
-export function PostInteractions({ post, onRequestUsername, onUpdate }: PostInteractionsProps) {
+export function PostInteractions({ post, adminName, onRequestUsername, onUpdate }: PostInteractionsProps) {
   const [showCommentInput, setShowCommentInput] = useState(false)
   const [commentText, setCommentText] = useState("")
   const [isLiking, setIsLiking] = useState(false)
@@ -134,6 +135,7 @@ export function PostInteractions({ post, onRequestUsername, onUpdate }: PostInte
               key={comment.id} 
               comment={comment} 
               postId={post.id}
+              adminName={adminName}
               onRequestUsername={onRequestUsername}
               onUpdate={onUpdate}
             />
@@ -169,17 +171,19 @@ export function PostInteractions({ post, onRequestUsername, onUpdate }: PostInte
 interface CommentItemProps {
   comment: Comment
   postId: string
+  adminName?: string
   onRequestUsername: (callback: () => void) => void
   onUpdate: () => void
 }
 
-function CommentItem({ comment, postId, onRequestUsername, onUpdate }: CommentItemProps) {
+function CommentItem({ comment, postId, adminName, onRequestUsername, onUpdate }: CommentItemProps) {
   const [showReplyInput, setShowReplyInput] = useState(false)
   const [replyText, setReplyText] = useState("")
   const [replyTo, setReplyTo] = useState<string | null>(null) // username being replied to
   const [isReplying, setIsReplying] = useState(false)
 
   const replies = comment.replies || []
+  const isAdmin = (username: string) => adminName && username === adminName
 
   const handleReplyClick = (targetUsername?: string) => {
     if (!hasUsername()) {
@@ -241,7 +245,7 @@ function CommentItem({ comment, postId, onRequestUsername, onUpdate }: CommentIt
     <div className="space-y-1">
       {/* Original Comment */}
       <div className="text-sm">
-        <span className="font-medium text-primary">{comment.username}</span>
+        <span className={`font-medium ${isAdmin(comment.username) ? 'text-orange-500' : 'text-primary'}`}>{comment.username}</span>
         <span className="text-foreground ml-1.5">{comment.text}</span>
       </div>
       <div className="flex items-center gap-2">
@@ -261,7 +265,7 @@ function CommentItem({ comment, postId, onRequestUsername, onUpdate }: CommentIt
           {replies.map((reply) => (
             <div key={reply.id}>
               <div className="text-sm">
-                <span className="font-medium text-primary">{reply.username}</span>
+                <span className={`font-medium ${isAdmin(reply.username) ? 'text-orange-500' : 'text-primary'}`}>{reply.username}</span>
                 {reply.replyTo && (
                   <span className="text-muted-foreground ml-1">
                     ➜ <span className="font-medium">{reply.replyTo}</span>

@@ -77,7 +77,7 @@ export function PostCard({ post, profile, onRequestUsername, onUpdate, onHashtag
           </div>
 
           {/* Interactions */}
-          <PostInteractions post={post} onRequestUsername={onRequestUsername} onUpdate={onUpdate} />
+          <PostInteractions post={post} adminName={profile?.name} onRequestUsername={onRequestUsername} onUpdate={onUpdate} />
         </div>
       </div>
 
