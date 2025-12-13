@@ -181,9 +181,11 @@ export function MomentsFeed() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-foreground">{t("moments")}</h1>
+          <h1 className={`text-lg font-semibold text-foreground ${isSearchOpen ? "hidden sm:block" : ""}`}>{t("moments")}</h1>
           <div className="flex items-center gap-2">
-            <LanguageSelector />
+            <div className={isSearchOpen ? "hidden sm:block" : ""}>
+              <LanguageSelector />
+            </div>
             {isSearchOpen ? (
               <form onSubmit={handleSearch} className="flex items-center gap-2">
                 <Input
@@ -191,7 +193,7 @@ export function MomentsFeed() {
                   placeholder={t("searchPosts")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-40 sm:w-56 h-8 text-sm"
+                  className="w-full sm:w-56 h-8 text-sm"
                   autoFocus
                 />
                 <Button type="submit" size="sm" variant="ghost" className="h-8 px-2">
@@ -224,7 +226,7 @@ export function MomentsFeed() {
               href="https://void.jy-s.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center h-8 px-2 rounded-md hover:bg-accent hover:text-accent-foreground group"
+              className={`items-center justify-center h-8 px-2 rounded-md hover:bg-accent hover:text-accent-foreground group ${isSearchOpen ? "hidden sm:inline-flex" : "inline-flex"}`}
               style={{ cursor: "default" }}
             >
               <img
