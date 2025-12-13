@@ -2,7 +2,7 @@ import { pgTable, text, timestamp, jsonb, uuid } from "drizzle-orm/pg-core"
 
 export const profile = pgTable("profile", {
   id: uuid("id").defaultRandom().primaryKey(),
-  name: text("name").notNull().default("My Moments"),
+  name: text("name").notNull().default("Moments"),
   avatarUrl: text("avatar_url"),
   bannerUrl: text("banner_url"),
 })

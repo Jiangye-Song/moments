@@ -15,7 +15,7 @@ async function migrate() {
   await sql`
     CREATE TABLE IF NOT EXISTS profile (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      name TEXT NOT NULL DEFAULT 'My Moments',
+      name TEXT NOT NULL DEFAULT 'Moments',
       avatar_url TEXT,
       banner_url TEXT
     )

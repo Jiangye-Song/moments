@@ -14,7 +14,7 @@ interface ProfileEditorProps {
 }
 
 export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
-  const [name, setName] = useState(profile?.name || "My Moments")
+  const [name, setName] = useState(profile?.name || "Moments")
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || "")
   const [bannerUrl, setBannerUrl] = useState(profile?.bannerUrl || "")
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)

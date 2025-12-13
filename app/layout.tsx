@@ -10,17 +10,16 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "My Moments",
-  description: "Personal photo album app",
-  generator: "v0.app",
+  title: "Moments",
+  description: "Jiangye's moments",
   icons: {
     icon: [
       {
-        url: "/icon-light-32x32.png",
+        url: "/icon-512.png",
         media: "(prefers-color-scheme: light)",
       },
       {
-        url: "/icon-dark-32x32.png",
+        url: "/icon-512.png",
         media: "(prefers-color-scheme: dark)",
       },
       {

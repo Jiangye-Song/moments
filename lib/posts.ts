@@ -5,7 +5,7 @@ import { eq, desc, ilike, or, sql } from "drizzle-orm"
 import type { Post, ProfileSettings, Comment } from "@/types"
 
 const DEFAULT_PROFILE: ProfileSettings = {
-  name: "My Moments",
+  name: "Moments",
   avatarUrl: null,
   bannerUrl: null,
 }
