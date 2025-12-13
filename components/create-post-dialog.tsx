@@ -16,6 +16,12 @@ import type { Photo } from "@/types"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB per file
 
+interface PresignedUploadUrl {
+  name: string
+  presignedUrl: string
+  publicUrl: string
+}
+
 interface CreatePostDialogProps {
   open: boolean
   onClose: () => void
@@ -28,6 +34,7 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"))
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,27 +71,58 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
     if (photos.length === 0) return
 
     setIsSubmitting(true)
+    setIsUploading(true)
+    setUploadProgress(0)
+
     try {
-      // Upload photos to blob storage
-      const formData = new FormData()
-      photos.forEach((photo) => {
-        if (photo.file) {
-          formData.append("files", photo.file)
-        }
-      })
-
-      setIsUploading(true)
-      const uploadRes = await fetch("/api/upload", {
+      const photosToUpload = photos.filter((p) => p.file)
+      
+      // Get presigned URLs from our API
+      const presignedRes = await fetch("/api/upload", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          files: photosToUpload.map((p) => ({
+            name: p.file!.name,
+            type: p.file!.type,
+          })),
+        }),
       })
 
-      if (!uploadRes.ok) {
-        const errorData = await uploadRes.json().catch(() => ({ error: "Upload failed" }))
-        throw new Error(errorData.error || `Upload failed with status ${uploadRes.status}`)
+      if (!presignedRes.ok) {
+        const error = await presignedRes.json()
+        throw new Error(error.error || "Failed to get upload URLs")
       }
 
-      const uploadedPhotos: Photo[] = await uploadRes.json()
+      const uploadUrls: PresignedUploadUrl[] = await presignedRes.json()
+      const uploadedPhotos: Photo[] = []
+
+      // Upload each file directly to B2 using presigned URL
+      for (let i = 0; i < photosToUpload.length; i++) {
+        const photo = photosToUpload[i]
+        const uploadInfo = uploadUrls[i]
+        if (!photo.file) continue
+
+        const uploadRes = await fetch(uploadInfo.presignedUrl, {
+          method: "PUT",
+          body: photo.file,
+          headers: {
+            "Content-Type": photo.file.type,
+          },
+        })
+
+        if (!uploadRes.ok) {
+          throw new Error(`Failed to upload ${photo.file.name}`)
+        }
+
+        uploadedPhotos.push({
+          id: crypto.randomUUID(),
+          url: uploadInfo.publicUrl,
+        })
+
+        setUploadProgress(Math.round(((i + 1) / photosToUpload.length) * 100))
+      }
+
       setIsUploading(false)
 
       await onSubmit({
@@ -105,6 +143,7 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
     } finally {
       setIsSubmitting(false)
       setIsUploading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -190,7 +229,7 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {isUploading ? "Uploading..." : "Posting..."}
+                {isUploading ? `Uploading... ${uploadProgress}%` : "Posting..."}
               </>
             ) : (
               "Post"

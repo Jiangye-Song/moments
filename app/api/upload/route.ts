@@ -1,77 +1,50 @@
 import { NextResponse } from "next/server"
-import { put } from "@vercel/blob"
+import { getPresignedUploadUrl } from "@/lib/b2"
 
-// Increase body size limit for file uploads (default is 4.5MB)
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
+export const maxDuration = 60
 
-// Allow larger request bodies for file uploads
-export const maxDuration = 60 // seconds
-export const dynamic = "force-dynamic"
-
+// Generate presigned URLs for client-side uploads to Backblaze B2
 export async function POST(request: Request) {
   try {
-    // Check content length before processing
-    const contentLength = request.headers.get("content-length")
-    if (contentLength && parseInt(contentLength) > 50 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: "Files too large. Maximum total size is 50MB." },
-        { status: 413 }
-      )
-    }
+    const body = await request.json()
+    const files: { name: string; type: string }[] = body.files
 
-    const formData = await request.formData()
-    const files = formData.getAll("files") as File[]
-
-    if (files.length === 0) {
+    if (!files || files.length === 0) {
       return NextResponse.json(
         { error: "No files provided" },
         { status: 400 }
       )
     }
 
-    // Check individual file sizes (max 10MB per file)
-    const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+    // Validate content types
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/heic", "image/heif"]
     for (const file of files) {
-      if (file.size > MAX_FILE_SIZE) {
+      if (!allowedTypes.includes(file.type)) {
         return NextResponse.json(
-          { error: `File "${file.name}" is too large. Maximum size per file is 10MB.` },
-          { status: 413 }
+          { error: `Invalid file type: ${file.type}` },
+          { status: 400 }
         )
       }
     }
 
-    const uploadedPhotos = await Promise.all(
+    // Generate presigned URLs for each file
+    const uploadUrls = await Promise.all(
       files.map(async (file) => {
-        const filename = `photos/${crypto.randomUUID()}-${file.name}`
-        const blob = await put(filename, file, {
-          access: "public",
-          contentType: file.type,
-        })
+        const { presignedUrl, publicUrl } = await getPresignedUploadUrl(file.name, file.type)
         return {
-          id: crypto.randomUUID(),
-          url: blob.url,
+          name: file.name,
+          presignedUrl,
+          publicUrl,
         }
-      }),
+      })
     )
 
-    return NextResponse.json(uploadedPhotos)
+    return NextResponse.json(uploadUrls)
   } catch (error) {
     console.error("Upload error:", error)
-    
-    // Handle specific error types
-    if (error instanceof Error) {
-      if (error.message.includes("body exceeded") || error.message.includes("too large")) {
-        return NextResponse.json(
-          { error: "Files too large. Try uploading fewer or smaller images." },
-          { status: 413 }
-        )
-      }
-    }
-    
-    return NextResponse.json({ error: "Failed to upload photos" }, { status: 500 })
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to generate upload URLs" },
+      { status: 500 }
+    )
   }
 }

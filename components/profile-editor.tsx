@@ -30,14 +30,35 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
 
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append("files", file)
-      const res = await fetch("/api/upload", {
+      // Get presigned URL from our API
+      const presignedRes = await fetch("/api/upload", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          files: [{ name: file.name, type: file.type }],
+        }),
       })
-      const [photo] = await res.json()
-      setUrl(photo.url)
+
+      if (!presignedRes.ok) {
+        throw new Error("Failed to get upload URL")
+      }
+
+      const [uploadInfo] = await presignedRes.json()
+
+      // Upload directly to B2 using presigned URL
+      const uploadRes = await fetch(uploadInfo.presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      })
+
+      if (!uploadRes.ok) {
+        throw new Error("Upload failed")
+      }
+
+      setUrl(uploadInfo.publicUrl)
     } catch (error) {
       console.error("Upload failed:", error)
     } finally {

@@ -6,12 +6,21 @@ import { useState, useRef } from "react"
 import Image from "next/image"
 import { format } from "date-fns"
 import { Calendar, Loader2, Plus, X } from "lucide-react"
+import { toast } from "sonner"
 import type { Post, Photo } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB per file
+
+interface PresignedUploadUrl {
+  name: string
+  presignedUrl: string
+  publicUrl: string
+}
 
 interface EditPostDialogProps {
   post: Post
@@ -28,11 +37,19 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
   const [newPhotoPreviews, setNewPhotoPreviews] = useState<{ file: File; preview: string }[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleAddPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
+
+    // Check file sizes
+    const oversizedFiles = files.filter(file => file.size > MAX_FILE_SIZE)
+    if (oversizedFiles.length > 0) {
+      toast.error(`Some files are too large (max 10MB per file): ${oversizedFiles.map(f => f.name).join(", ")}`)
+      return
+    }
 
     const previews = files.map((file) => ({
       file,
@@ -54,7 +71,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
 
   const handleSave = async () => {
     if (photos.length === 0 && newPhotoPreviews.length === 0) {
-      alert("A post must have at least one photo")
+      toast.error("A post must have at least one photo")
       return
     }
 
@@ -63,12 +80,52 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
       let uploadedPhotos: Photo[] = []
       if (newPhotoPreviews.length > 0) {
         setIsUploading(true)
-        const formData = new FormData()
-        newPhotoPreviews.forEach(({ file }) => {
-          formData.append("files", file)
+        setUploadProgress(0)
+        
+        // Get presigned URLs from our API
+        const presignedRes = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            files: newPhotoPreviews.map((p) => ({
+              name: p.file.name,
+              type: p.file.type,
+            })),
+          }),
         })
-        const res = await fetch("/api/upload", { method: "POST", body: formData })
-        uploadedPhotos = await res.json()
+
+        if (!presignedRes.ok) {
+          const error = await presignedRes.json()
+          throw new Error(error.error || "Failed to get upload URLs")
+        }
+
+        const uploadUrls: PresignedUploadUrl[] = await presignedRes.json()
+
+        // Upload each file directly to B2 using presigned URL
+        for (let i = 0; i < newPhotoPreviews.length; i++) {
+          const { file } = newPhotoPreviews[i]
+          const uploadInfo = uploadUrls[i]
+
+          const uploadRes = await fetch(uploadInfo.presignedUrl, {
+            method: "PUT",
+            body: file,
+            headers: {
+              "Content-Type": file.type,
+            },
+          })
+
+          if (!uploadRes.ok) {
+            throw new Error(`Failed to upload ${file.name}`)
+          }
+
+          uploadedPhotos.push({
+            id: crypto.randomUUID(),
+            url: uploadInfo.publicUrl,
+          })
+
+          setUploadProgress(Math.round(((i + 1) / newPhotoPreviews.length) * 100))
+        }
+        
         setIsUploading(false)
       }
 
@@ -89,9 +146,12 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
       onClose()
     } catch (error) {
       console.error("Save failed:", error)
+      const message = error instanceof Error ? error.message : "Failed to save changes"
+      toast.error(message)
     } finally {
       setIsSaving(false)
       setIsUploading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -194,7 +254,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {isUploading ? "Uploading..." : "Saving..."}
+                {isUploading ? `Uploading... ${uploadProgress}%` : "Saving..."}
               </>
             ) : (
               "Save Changes"
