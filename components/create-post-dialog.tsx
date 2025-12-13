@@ -77,6 +77,10 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
     try {
       const photosToUpload = photos.filter((p) => p.file)
       
+      if (photosToUpload.length === 0) {
+        throw new Error("No valid photos to upload")
+      }
+      
       // Get presigned URLs from our API
       const presignedRes = await fetch("/api/upload", {
         method: "POST",
@@ -89,13 +93,27 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
         }),
       })
 
+      // Check for non-JSON error responses (like 413 from Vercel edge)
+      const contentType = presignedRes.headers.get("content-type")
+      if (!contentType?.includes("application/json")) {
+        const text = await presignedRes.text()
+        console.error("Non-JSON response:", presignedRes.status, text)
+        throw new Error(`Server error (${presignedRes.status}): ${text.slice(0, 100)}`)
+      }
+
       if (!presignedRes.ok) {
         const error = await presignedRes.json()
-        throw new Error(error.error || "Failed to get upload URLs")
+        throw new Error(error.error || `Failed to get upload URLs (${presignedRes.status})`)
       }
 
       const uploadUrls: PresignedUploadUrl[] = await presignedRes.json()
+      
+      if (!uploadUrls || uploadUrls.length !== photosToUpload.length) {
+        throw new Error("Mismatch between files and upload URLs")
+      }
+      
       const uploadedPhotos: Photo[] = []
+      const failedUploads: string[] = []
 
       // Upload each file directly to B2 using presigned URL
       for (let i = 0; i < photosToUpload.length; i++) {
@@ -103,24 +121,42 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
         const uploadInfo = uploadUrls[i]
         if (!photo.file) continue
 
-        const uploadRes = await fetch(uploadInfo.presignedUrl, {
-          method: "PUT",
-          body: photo.file,
-          headers: {
-            "Content-Type": photo.file.type,
-          },
-        })
+        try {
+          const uploadRes = await fetch(uploadInfo.presignedUrl, {
+            method: "PUT",
+            body: photo.file,
+            headers: {
+              "Content-Type": photo.file.type,
+            },
+          })
 
-        if (!uploadRes.ok) {
-          throw new Error(`Failed to upload ${photo.file.name}`)
+          if (!uploadRes.ok) {
+            const errorText = await uploadRes.text().catch(() => "Unknown error")
+            console.error(`Upload failed for ${photo.file.name}:`, uploadRes.status, errorText)
+            failedUploads.push(photo.file.name)
+            continue
+          }
+
+          uploadedPhotos.push({
+            id: crypto.randomUUID(),
+            url: uploadInfo.publicUrl,
+          })
+        } catch (uploadError) {
+          console.error(`Upload error for ${photo.file.name}:`, uploadError)
+          failedUploads.push(photo.file.name)
         }
 
-        uploadedPhotos.push({
-          id: crypto.randomUUID(),
-          url: uploadInfo.publicUrl,
-        })
-
         setUploadProgress(Math.round(((i + 1) / photosToUpload.length) * 100))
+      }
+
+      // Check if any uploads succeeded
+      if (uploadedPhotos.length === 0) {
+        throw new Error(`All uploads failed: ${failedUploads.join(", ")}`)
+      }
+      
+      // Warn about partial failures
+      if (failedUploads.length > 0) {
+        toast.warning(`${failedUploads.length} file(s) failed to upload: ${failedUploads.join(", ")}`)
       }
 
       setIsUploading(false)

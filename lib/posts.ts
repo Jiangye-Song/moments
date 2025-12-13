@@ -1,8 +1,12 @@
-import { put, del } from "@vercel/blob"
 import { db } from "./db"
 import { posts, comments, profile, settings } from "./schema"
 import { eq, desc, ilike, or, sql } from "drizzle-orm"
+import { DeleteObjectCommand } from "@aws-sdk/client-s3"
+import { s3Client } from "./b2"
 import type { Post, ProfileSettings, Comment } from "@/types"
+
+const B2_BUCKET_NAME = process.env.B2_BUCKET_NAME!
+const B2_ENDPOINT = process.env.B2_ENDPOINT!
 
 const DEFAULT_PROFILE: ProfileSettings = {
   name: "Moments",
@@ -180,6 +184,26 @@ export async function addPost(post: Omit<Post, "id" | "createdAt" | "likes" | "c
   }
 }
 
+// Helper to delete a photo from B2
+async function deletePhotoFromB2(url: string): Promise<void> {
+  try {
+    // Extract the key from the URL
+    // URL format: https://bucket-name.s3.region.backblazeb2.com/photos/uuid-filename
+    const urlObj = new URL(url)
+    const key = urlObj.pathname.slice(1) // Remove leading slash
+    
+    if (key) {
+      await s3Client.send(new DeleteObjectCommand({
+        Bucket: B2_BUCKET_NAME,
+        Key: key,
+      }))
+    }
+  } catch (error) {
+    console.error("Failed to delete photo from B2:", error)
+    // Don't throw - photo might already be deleted or URL might be from old storage
+  }
+}
+
 export async function updatePost(
   postId: string,
   updates: Partial<Pick<Post, "title" | "description" | "date" | "photos">>,
@@ -196,11 +220,7 @@ export async function updatePost(
     // Delete photos that are no longer in the post
     for (const oldPhoto of existingPhotos) {
       if (!newPhotoUrls.has(oldPhoto.url)) {
-        try {
-          await del(oldPhoto.url)
-        } catch {
-          // Photo might already be deleted
-        }
+        await deletePhotoFromB2(oldPhoto.url)
       }
     }
   }
@@ -245,12 +265,9 @@ export async function deletePost(postId: string): Promise<void> {
   
   if (existingPosts.length > 0) {
     const post = existingPosts[0]
-    for (const photo of post.photos) {
-      try {
-        await del(photo.url)
-      } catch {
-        // Photo might already be deleted
-      }
+    const photos = parseJsonArray(post.photos)
+    for (const photo of photos) {
+      await deletePhotoFromB2(photo.url)
     }
   }
   
@@ -367,15 +384,6 @@ export async function removeLike(postId: string, username: string): Promise<bool
     .where(eq(posts.id, postId))
   
   return true
-}
-
-export async function uploadPhoto(file: File): Promise<{ url: string }> {
-  const filename = `photos/${crypto.randomUUID()}-${file.name}`
-  const blob = await put(filename, file, {
-    access: "public",
-    contentType: file.type,
-  })
-  return { url: blob.url }
 }
 
 export async function checkUsernameExists(username: string): Promise<boolean> {

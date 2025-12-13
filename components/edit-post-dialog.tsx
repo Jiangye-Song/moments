@@ -94,36 +94,56 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
           }),
         })
 
+        // Check for non-JSON error responses
+        const contentType = presignedRes.headers.get("content-type")
+        if (!contentType?.includes("application/json")) {
+          const text = await presignedRes.text()
+          console.error("Non-JSON response:", presignedRes.status, text)
+          throw new Error(`Server error (${presignedRes.status}): ${text.slice(0, 100)}`)
+        }
+
         if (!presignedRes.ok) {
           const error = await presignedRes.json()
-          throw new Error(error.error || "Failed to get upload URLs")
+          throw new Error(error.error || `Failed to get upload URLs (${presignedRes.status})`)
         }
 
         const uploadUrls: PresignedUploadUrl[] = await presignedRes.json()
+        const failedUploads: string[] = []
 
         // Upload each file directly to B2 using presigned URL
         for (let i = 0; i < newPhotoPreviews.length; i++) {
           const { file } = newPhotoPreviews[i]
           const uploadInfo = uploadUrls[i]
 
-          const uploadRes = await fetch(uploadInfo.presignedUrl, {
-            method: "PUT",
-            body: file,
-            headers: {
-              "Content-Type": file.type,
-            },
-          })
+          try {
+            const uploadRes = await fetch(uploadInfo.presignedUrl, {
+              method: "PUT",
+              body: file,
+              headers: {
+                "Content-Type": file.type,
+              },
+            })
 
-          if (!uploadRes.ok) {
-            throw new Error(`Failed to upload ${file.name}`)
+            if (!uploadRes.ok) {
+              console.error(`Upload failed for ${file.name}:`, uploadRes.status)
+              failedUploads.push(file.name)
+              continue
+            }
+
+            uploadedPhotos.push({
+              id: crypto.randomUUID(),
+              url: uploadInfo.publicUrl,
+            })
+          } catch (uploadError) {
+            console.error(`Upload error for ${file.name}:`, uploadError)
+            failedUploads.push(file.name)
           }
 
-          uploadedPhotos.push({
-            id: crypto.randomUUID(),
-            url: uploadInfo.publicUrl,
-          })
-
           setUploadProgress(Math.round(((i + 1) / newPhotoPreviews.length) * 100))
+        }
+        
+        if (failedUploads.length > 0) {
+          toast.warning(`${failedUploads.length} file(s) failed to upload: ${failedUploads.join(", ")}`)
         }
         
         setIsUploading(false)
@@ -131,6 +151,10 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
 
       // Combine existing and new photos
       const allPhotos = [...photos, ...uploadedPhotos]
+      
+      if (allPhotos.length === 0) {
+        throw new Error("No photos available for the post")
+      }
 
       await fetch(`/api/posts/${post.id}`, {
         method: "PATCH",

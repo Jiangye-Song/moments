@@ -2,6 +2,7 @@
 import { useState, useRef } from "react"
 import Image from "next/image"
 import { Camera, Loader2, User } from "lucide-react"
+import { toast } from "sonner"
 import type { ProfileSettings } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,11 +40,24 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
         }),
       })
 
+      // Check for non-JSON error responses
+      const contentType = presignedRes.headers.get("content-type")
+      if (!contentType?.includes("application/json")) {
+        const text = await presignedRes.text()
+        console.error("Non-JSON response:", presignedRes.status, text)
+        throw new Error(`Server error (${presignedRes.status})`)
+      }
+
       if (!presignedRes.ok) {
-        throw new Error("Failed to get upload URL")
+        const error = await presignedRes.json()
+        throw new Error(error.error || "Failed to get upload URL")
       }
 
       const [uploadInfo] = await presignedRes.json()
+      
+      if (!uploadInfo?.presignedUrl) {
+        throw new Error("Invalid upload URL received")
+      }
 
       // Upload directly to B2 using presigned URL
       const uploadRes = await fetch(uploadInfo.presignedUrl, {
@@ -55,12 +69,15 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
       })
 
       if (!uploadRes.ok) {
+        const errorText = await uploadRes.text().catch(() => "Unknown error")
+        console.error("B2 upload failed:", uploadRes.status, errorText)
         throw new Error("Upload failed")
       }
 
       setUrl(uploadInfo.publicUrl)
     } catch (error) {
       console.error("Upload failed:", error)
+      toast.error(error instanceof Error ? error.message : "Upload failed")
     } finally {
       setUploading(false)
     }
