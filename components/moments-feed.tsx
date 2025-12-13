@@ -17,7 +17,13 @@ import { Toaster } from "sonner"
 import { useLanguage } from "@/lib/language-context"
 import { usePrimaryColor } from "@/lib/primary-color-context"
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+const fetcher = async (url: string) => {
+  const res = await fetch(url)
+  if (!res.ok) {
+    throw new Error(`Request failed with status ${res.status}`)
+  }
+  return res.json()
+}
 
 const PAGE_SIZE = 10
 
