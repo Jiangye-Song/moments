@@ -124,3 +124,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Void icon hover rotation */
+.void-icon {
+  transition: transform 0.3s ease;
+}
+
+.void-icon:hover {
+  animation: spin-infinite 1s linear infinite;
+}
+
+@keyframes spin-infinite {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

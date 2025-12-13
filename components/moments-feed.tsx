@@ -55,10 +55,10 @@ export function MomentsFeed() {
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
-  // Flatten all pages into a single posts array
+  // Flatten all pages into a single posts array, filtering out invalid entries
   const posts = useMemo(() => {
     if (!pages) return []
-    return pages.flatMap(page => page.posts)
+    return pages.flatMap(page => page.posts || []).filter((post): post is Post => !!post && !!post.date)
   }, [pages])
 
   const isLoadingMore = isLoading || (size > 0 && pages && typeof pages[size - 1] === "undefined")
@@ -134,7 +134,7 @@ export function MomentsFeed() {
 
   // Group posts by year and month for timeline
   const groupedPosts = useMemo(() => {
-    if (!posts) return []
+    if (!posts || posts.length === 0 || hasNetworkError) return []
     
     const groups: { year: number; month: number; monthName: string; posts: Post[]; showYear: boolean; showMonth: boolean }[] = []
     let lastYear: number | null = null
@@ -166,7 +166,7 @@ export function MomentsFeed() {
     })
     
     return groups
-  }, [posts])
+  }, [posts, hasNetworkError])
 
   return (
     <div className="min-h-screen bg-background">
@@ -214,6 +214,19 @@ export function MomentsFeed() {
                 <Search className="h-4 w-4" />
               </Button>
             )}
+            <a
+              href="https://void.jy-s.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center h-8 px-2 rounded-md hover:bg-accent hover:text-accent-foreground group"
+              style={{ cursor: "default" }}
+            >
+              <img
+                src="https://jy-s.com/wp-content/uploads/2025/01/damage-void-icon-2048x2048-jdl821dd.png"
+                alt="Void"
+                className="void-icon w-4 h-4 object-contain group-hover:animate-spin"
+              />
+            </a>
           </div>
         </div>
         
