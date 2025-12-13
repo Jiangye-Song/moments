@@ -182,18 +182,18 @@ export function MomentsFeed() {
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <h1 className={`text-lg font-semibold text-foreground ${isSearchOpen ? "hidden sm:block" : ""}`}>{t("moments")}</h1>
-          <div className="flex items-center gap-2">
+          <div className={`flex items-center gap-2 ${isSearchOpen ? "flex-1 sm:flex-none" : ""}`}>
             <div className={isSearchOpen ? "hidden sm:block" : ""}>
               <LanguageSelector />
             </div>
             {isSearchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center gap-2">
+              <form onSubmit={handleSearch} className="flex items-center gap-2 flex-1 sm:flex-none">
                 <Input
                   type="text"
                   placeholder={t("searchPosts")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-56 h-8 text-sm"
+                  className="flex-1 sm:w-56 h-8 text-sm"
                   autoFocus
                 />
                 <Button type="submit" size="sm" variant="ghost" className="h-8 px-2">
