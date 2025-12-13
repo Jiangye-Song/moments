@@ -5,6 +5,7 @@ import { useState, useRef } from "react"
 import Image from "next/image"
 import { format } from "date-fns"
 import { X, ImagePlus, Calendar, Loader2, Check } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
@@ -52,21 +53,84 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
     if (photos.length === 0) return
 
     setIsSubmitting(true)
+    setIsUploading(true)
+    
     try {
-      const formData = new FormData()
-      photos.forEach((photo) => {
-        if (photo.file) {
-          formData.append("files", photo.file)
-        }
-      })
+      const photosToUpload = photos.filter((p) => p.file)
+      
+      if (photosToUpload.length === 0) {
+        throw new Error("No valid photos to upload")
+      }
+      
+      const uploadedPhotos: Photo[] = []
+      const failedUploads: string[] = []
 
-      setIsUploading(true)
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      })
-      const uploadedPhotos: Photo[] = await uploadRes.json()
+      // Upload each file one at a time (request presigned URL via GET, then upload)
+      for (let i = 0; i < photosToUpload.length; i++) {
+        const photo = photosToUpload[i]
+        if (!photo.file) continue
+
+        console.log(`[Upload ${i + 1}/${photosToUpload.length}] Starting upload for: ${photo.file.name}`)
+
+        try {
+          // Get presigned URL using GET with query params
+          const params = new URLSearchParams({
+            name: photo.file.name,
+            type: photo.file.type,
+          })
+          const presignedRes = await fetch(`/api/upload?${params}`)
+
+          if (!presignedRes.ok) {
+            const contentType = presignedRes.headers.get("content-type")
+            if (contentType?.includes("application/json")) {
+              const error = await presignedRes.json()
+              throw new Error(error.error || `Failed to get upload URL (${presignedRes.status})`)
+            } else {
+              const text = await presignedRes.text()
+              throw new Error(`Server error (${presignedRes.status}): ${text.slice(0, 50)}`)
+            }
+          }
+
+          const uploadInfo = await presignedRes.json()
+          
+          if (!uploadInfo?.presignedUrl) {
+            throw new Error("Invalid upload URL received")
+          }
+
+          // Upload to B2 using presigned URL
+          const uploadRes = await fetch(uploadInfo.presignedUrl, {
+            method: "PUT",
+            body: photo.file,
+            headers: {
+              "Content-Type": photo.file.type,
+            },
+          })
+
+          if (!uploadRes.ok) {
+            throw new Error(`B2 upload failed with status ${uploadRes.status}`)
+          }
+
+          uploadedPhotos.push({
+            id: crypto.randomUUID(),
+            url: uploadInfo.publicUrl,
+          })
+        } catch (uploadError) {
+          console.error(`Upload error for ${photo.file.name}:`, uploadError)
+          failedUploads.push(photo.file.name)
+        }
+      }
+
       setIsUploading(false)
+
+      // Check if any uploads succeeded
+      if (uploadedPhotos.length === 0) {
+        throw new Error(`All uploads failed: ${failedUploads.join(", ")}`)
+      }
+      
+      // Warn about partial failures
+      if (failedUploads.length > 0) {
+        toast.warning(`${failedUploads.length} file(s) failed to upload: ${failedUploads.join(", ")}`)
+      }
 
       await fetch("/api/posts", {
         method: "POST",
@@ -89,6 +153,8 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
       onCreated()
     } catch (error) {
       console.error("Failed to create post:", error)
+      const message = error instanceof Error ? error.message : "Failed to create post"
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
       setIsUploading(false)
