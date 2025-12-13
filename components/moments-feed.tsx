@@ -242,7 +242,7 @@ export function MomentsFeed() {
       </header>
 
       {/* Cover photo area */}
-      <div className="relative h-72 bg-gradient-to-b from-[#E0E2E0] to-white overflow-hidden">
+      <div className="relative h-72 bg-gradient-to-b from-[#E0E2E0] to-white overflow-hidden mb-10">
         {profile?.bannerUrl && (
           <Image src={profile.bannerUrl || "/epty_banner.png"} alt="Banner" fill className="object-cover" />
         )}
