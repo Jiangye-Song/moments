@@ -11,7 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
 import type { Photo } from "@/types"
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB per file
 
 interface CreatePostDialogProps {
   open: boolean
@@ -30,6 +33,13 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
+
+    // Check file sizes before adding
+    const oversizedFiles = files.filter(file => file.size > MAX_FILE_SIZE)
+    if (oversizedFiles.length > 0) {
+      toast.error(`Some files are too large (max 10MB per file): ${oversizedFiles.map(f => f.name).join(", ")}`)
+      return
+    }
 
     // Create preview URLs
     const newPhotos = files.map((file) => ({
@@ -68,6 +78,12 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
         method: "POST",
         body: formData,
       })
+
+      if (!uploadRes.ok) {
+        const errorData = await uploadRes.json().catch(() => ({ error: "Upload failed" }))
+        throw new Error(errorData.error || `Upload failed with status ${uploadRes.status}`)
+      }
+
       const uploadedPhotos: Photo[] = await uploadRes.json()
       setIsUploading(false)
 
@@ -84,6 +100,8 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
       onClose()
     } catch (error) {
       console.error("Failed to create post:", error)
+      const message = error instanceof Error ? error.message : "Failed to create post"
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
       setIsUploading(false)
