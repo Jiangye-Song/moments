@@ -16,12 +16,6 @@ import { Label } from "@/components/ui/label"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB per file
 
-interface PresignedUploadUrl {
-  name: string
-  presignedUrl: string
-  publicUrl: string
-}
-
 interface EditPostDialogProps {
   post: Post
   open: boolean
@@ -82,40 +76,40 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
         setIsUploading(true)
         setUploadProgress(0)
         
-        // Get presigned URLs from our API
-        const presignedRes = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            files: newPhotoPreviews.map((p) => ({
-              name: p.file.name,
-              type: p.file.type,
-            })),
-          }),
-        })
-
-        // Check for non-JSON error responses
-        const contentType = presignedRes.headers.get("content-type")
-        if (!contentType?.includes("application/json")) {
-          const text = await presignedRes.text()
-          console.error("Non-JSON response:", presignedRes.status, text)
-          throw new Error(`Server error (${presignedRes.status}): ${text.slice(0, 100)}`)
-        }
-
-        if (!presignedRes.ok) {
-          const error = await presignedRes.json()
-          throw new Error(error.error || `Failed to get upload URLs (${presignedRes.status})`)
-        }
-
-        const uploadUrls: PresignedUploadUrl[] = await presignedRes.json()
         const failedUploads: string[] = []
 
-        // Upload each file directly to B2 using presigned URL
+        // Upload each file one at a time (request presigned URL, then upload)
         for (let i = 0; i < newPhotoPreviews.length; i++) {
           const { file } = newPhotoPreviews[i]
-          const uploadInfo = uploadUrls[i]
 
           try {
+            // Get presigned URL for this single file
+            const presignedRes = await fetch("/api/upload", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                files: [{ name: file.name, type: file.type }],
+              }),
+            })
+
+            if (!presignedRes.ok) {
+              const contentType = presignedRes.headers.get("content-type")
+              if (contentType?.includes("application/json")) {
+                const error = await presignedRes.json()
+                throw new Error(error.error || `Failed to get upload URL (${presignedRes.status})`)
+              } else {
+                const text = await presignedRes.text()
+                throw new Error(`Server error (${presignedRes.status}): ${text.slice(0, 50)}`)
+              }
+            }
+
+            const [uploadInfo] = await presignedRes.json()
+            
+            if (!uploadInfo?.presignedUrl) {
+              throw new Error("Invalid upload URL received")
+            }
+
+            // Upload to B2 using presigned URL
             const uploadRes = await fetch(uploadInfo.presignedUrl, {
               method: "PUT",
               body: file,
@@ -125,9 +119,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
             })
 
             if (!uploadRes.ok) {
-              console.error(`Upload failed for ${file.name}:`, uploadRes.status)
-              failedUploads.push(file.name)
-              continue
+              throw new Error(`B2 upload failed with status ${uploadRes.status}`)
             }
 
             uploadedPhotos.push({

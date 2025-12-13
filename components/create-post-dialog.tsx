@@ -16,12 +16,6 @@ import type { Photo } from "@/types"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB per file
 
-interface PresignedUploadUrl {
-  name: string
-  presignedUrl: string
-  publicUrl: string
-}
-
 interface CreatePostDialogProps {
   open: boolean
   onClose: () => void
@@ -81,47 +75,42 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
         throw new Error("No valid photos to upload")
       }
       
-      // Get presigned URLs from our API
-      const presignedRes = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          files: photosToUpload.map((p) => ({
-            name: p.file!.name,
-            type: p.file!.type,
-          })),
-        }),
-      })
-
-      // Check for non-JSON error responses (like 413 from Vercel edge)
-      const contentType = presignedRes.headers.get("content-type")
-      if (!contentType?.includes("application/json")) {
-        const text = await presignedRes.text()
-        console.error("Non-JSON response:", presignedRes.status, text)
-        throw new Error(`Server error (${presignedRes.status}): ${text.slice(0, 100)}`)
-      }
-
-      if (!presignedRes.ok) {
-        const error = await presignedRes.json()
-        throw new Error(error.error || `Failed to get upload URLs (${presignedRes.status})`)
-      }
-
-      const uploadUrls: PresignedUploadUrl[] = await presignedRes.json()
-      
-      if (!uploadUrls || uploadUrls.length !== photosToUpload.length) {
-        throw new Error("Mismatch between files and upload URLs")
-      }
-      
       const uploadedPhotos: Photo[] = []
       const failedUploads: string[] = []
 
-      // Upload each file directly to B2 using presigned URL
+      // Upload each file one at a time (request presigned URL, then upload)
       for (let i = 0; i < photosToUpload.length; i++) {
         const photo = photosToUpload[i]
-        const uploadInfo = uploadUrls[i]
         if (!photo.file) continue
 
         try {
+          // Get presigned URL for this single file
+          const presignedRes = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              files: [{ name: photo.file.name, type: photo.file.type }],
+            }),
+          })
+
+          if (!presignedRes.ok) {
+            const contentType = presignedRes.headers.get("content-type")
+            if (contentType?.includes("application/json")) {
+              const error = await presignedRes.json()
+              throw new Error(error.error || `Failed to get upload URL (${presignedRes.status})`)
+            } else {
+              const text = await presignedRes.text()
+              throw new Error(`Server error (${presignedRes.status}): ${text.slice(0, 50)}`)
+            }
+          }
+
+          const [uploadInfo] = await presignedRes.json()
+          
+          if (!uploadInfo?.presignedUrl) {
+            throw new Error("Invalid upload URL received")
+          }
+
+          // Upload to B2 using presigned URL
           const uploadRes = await fetch(uploadInfo.presignedUrl, {
             method: "PUT",
             body: photo.file,
@@ -131,10 +120,7 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
           })
 
           if (!uploadRes.ok) {
-            const errorText = await uploadRes.text().catch(() => "Unknown error")
-            console.error(`Upload failed for ${photo.file.name}:`, uploadRes.status, errorText)
-            failedUploads.push(photo.file.name)
-            continue
+            throw new Error(`B2 upload failed with status ${uploadRes.status}`)
           }
 
           uploadedPhotos.push({
