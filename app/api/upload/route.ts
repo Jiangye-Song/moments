@@ -1,12 +1,72 @@
 import { NextResponse } from "next/server"
 import { getPresignedUploadUrl } from "@/lib/b2"
 
+// Route segment config
 export const maxDuration = 60
+export const dynamic = "force-dynamic"
 
-// Generate presigned URLs for client-side uploads to Backblaze B2
+// GET request with query params - avoids body size issues entirely
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const name = searchParams.get("name")
+    const type = searchParams.get("type")
+
+    if (!name || !type) {
+      return NextResponse.json(
+        { error: "Missing name or type parameter" },
+        { status: 400 }
+      )
+    }
+
+    // Validate content type
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/heic", "image/heif"]
+    if (!allowedTypes.includes(type)) {
+      return NextResponse.json(
+        { error: `Invalid file type: ${type}` },
+        { status: 400 }
+      )
+    }
+
+    const { presignedUrl, publicUrl } = await getPresignedUploadUrl(name, type)
+
+    return NextResponse.json({
+      name,
+      presignedUrl,
+      publicUrl,
+    })
+  } catch (error) {
+    console.error("Upload URL generation error:", error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to generate upload URL" },
+      { status: 500 }
+    )
+  }
+}
+
+// Keep POST for backward compatibility
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const text = await request.text()
+    
+    if (!text || text.length < 2) {
+      return NextResponse.json(
+        { error: "Empty request body" },
+        { status: 400 }
+      )
+    }
+
+    let body
+    try {
+      body = JSON.parse(text)
+    } catch {
+      console.error("Failed to parse JSON:", text.slice(0, 100))
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      )
+    }
+
     const files: { name: string; type: string }[] = body.files
 
     if (!files || files.length === 0) {

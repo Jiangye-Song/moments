@@ -31,14 +31,12 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
 
     setUploading(true)
     try {
-      // Get presigned URL from our API
-      const presignedRes = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          files: [{ name: file.name, type: file.type }],
-        }),
+      // Get presigned URL using GET with query params (avoids body size issues)
+      const params = new URLSearchParams({
+        name: file.name,
+        type: file.type,
       })
+      const presignedRes = await fetch(`/api/upload?${params}`)
 
       // Check for non-JSON error responses
       const contentType = presignedRes.headers.get("content-type")
@@ -53,7 +51,7 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
         throw new Error(error.error || "Failed to get upload URL")
       }
 
-      const [uploadInfo] = await presignedRes.json()
+      const uploadInfo = await presignedRes.json()
       
       if (!uploadInfo?.presignedUrl) {
         throw new Error("Invalid upload URL received")

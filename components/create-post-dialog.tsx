@@ -78,20 +78,18 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
       const uploadedPhotos: Photo[] = []
       const failedUploads: string[] = []
 
-      // Upload each file one at a time (request presigned URL, then upload)
+      // Upload each file one at a time (request presigned URL via GET, then upload)
       for (let i = 0; i < photosToUpload.length; i++) {
         const photo = photosToUpload[i]
         if (!photo.file) continue
 
         try {
-          // Get presigned URL for this single file
-          const presignedRes = await fetch("/api/upload", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              files: [{ name: photo.file.name, type: photo.file.type }],
-            }),
+          // Get presigned URL using GET with query params (avoids body size issues)
+          const params = new URLSearchParams({
+            name: photo.file.name,
+            type: photo.file.type,
           })
+          const presignedRes = await fetch(`/api/upload?${params}`)
 
           if (!presignedRes.ok) {
             const contentType = presignedRes.headers.get("content-type")
@@ -104,7 +102,7 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
             }
           }
 
-          const [uploadInfo] = await presignedRes.json()
+          const uploadInfo = await presignedRes.json()
           
           if (!uploadInfo?.presignedUrl) {
             throw new Error("Invalid upload URL received")
