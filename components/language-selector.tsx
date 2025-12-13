@@ -29,7 +29,10 @@ export function LanguageSelector() {
           <DropdownMenuItem
             key={lang}
             onClick={() => setLanguage(lang)}
-            className={language === lang ? "bg-accent" : ""}
+            className={language === lang 
+              ? "bg-primary text-primary-foreground" 
+              : "hover:bg-primary/10"
+            }
           >
             {languageNames[lang]}
           </DropdownMenuItem>

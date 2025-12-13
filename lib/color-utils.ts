@@ -217,6 +217,7 @@ export function extractDominantColor(imageUrl: string): Promise<string> {
 
 /**
  * Generate CSS custom property values from a primary color
+ * Ensures primary color is dark enough for white text (max 45% lightness)
  */
 export function generateColorVariables(hexColor: string): Record<string, string> {
   const rgb = hexToRgb(hexColor)
@@ -226,11 +227,15 @@ export function generateColorVariables(hexColor: string): Record<string, string>
   
   const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b)
   
-  // Generate light mode primary (slightly darker)
-  const lightPrimary = hslToOklch(hsl.h, Math.min(hsl.s + 10, 100), Math.max(hsl.l - 10, 35))
+  // Ensure primary color is dark enough for white text
+  // Cap lightness at 45% for good contrast with white text
+  const darkLightness = Math.min(hsl.l, 45)
   
-  // Generate dark mode primary (slightly lighter)
-  const darkPrimary = hslToOklch(hsl.h, Math.min(hsl.s + 5, 100), Math.min(hsl.l + 10, 65))
+  // Generate light mode primary (dark enough for white text)
+  const lightPrimary = hslToOklch(hsl.h, Math.min(hsl.s + 10, 100), Math.max(darkLightness - 5, 30))
+  
+  // Generate dark mode primary (slightly lighter but still readable)
+  const darkPrimary = hslToOklch(hsl.h, Math.min(hsl.s + 5, 100), Math.min(darkLightness + 15, 55))
   
   return {
     "--primary": lightPrimary,
