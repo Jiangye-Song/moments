@@ -26,6 +26,7 @@ export const translations = {
     // Username dialog
     "welcome": "Welcome!",
     "enterNameToInteract": "Enter your username to interact with posts",
+    "usernameTip": "There's no direct way to change your username after this, so choose wisely.",
     "yourName": "Your Username",
     "enterYourName": "Enter your username",
     "cancel": "Cancel",
@@ -81,6 +82,7 @@ export const translations = {
     // Username dialog
     "welcome": "欢迎！",
     "enterNameToInteract": "输入您的用户名以互动",
+    "usernameTip": "用户名设定后无直接方法修改，请谨慎选择。",
     "yourName": "您的用户名",
     "enterYourName": "输入您的用户名",
     "cancel": "取消",
@@ -136,6 +138,7 @@ export const translations = {
     // Username dialog
     "welcome": "歡迎！",
     "enterNameToInteract": "輸入您的用戶名以互動",
+    "usernameTip": "用戶名設定後無法直接更改，請謹慎選擇。",
     "yourName": "您的用戶名",
     "enterYourName": "輸入您的用戶名",
     "cancel": "取消",
@@ -191,6 +194,7 @@ export const translations = {
     // Username dialog
     "welcome": "ようこそ！",
     "enterNameToInteract": "ポストに反応するにはユーザーネームを入力してください",
+    "usernameTip": "ユーザーネームは後から変更できませんので、慎重にお選びください。",
     "yourName": "ユーザーネーム",
     "enterYourName": "ユーザーネームを入力",
     "cancel": "キャンセル",
