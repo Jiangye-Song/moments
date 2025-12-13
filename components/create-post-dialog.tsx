@@ -148,22 +148,16 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
               {photos.map((photo) => (
                 <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden group">
                   <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
-                  <button
-                    onClick={() => removePhoto(photo.id)}
-                    className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
+                  <button onClick={() => removePhoto(photo.id)} className="icon-close-btn">
                     <X className="h-4 w-4 text-white" />
                   </button>
                 </div>
               ))}
 
-              <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center gap-1 hover:border-muted-foreground/50 transition-colors"
-                >
-                  <ImagePlus className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Add</span>
-                </button>
+              <button onClick={() => fileInputRef.current?.click()} className="add-photo-btn">
+                <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Add</span>
+              </button>
             </div>
             <p className="text-xs text-muted-foreground">{photos.length} photo{photos.length !== 1 ? 's' : ''}</p>
           </div>

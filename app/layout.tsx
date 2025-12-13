@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { LanguageProvider } from "@/lib/language-context"
+import { ThemeProvider } from "@/lib/theme-context"
 import { PrimaryColorProvider } from "@/lib/primary-color-context"
 import "./globals.css"
 
@@ -37,13 +38,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
-        <LanguageProvider>
-          <PrimaryColorProvider>
-            {children}
-          </PrimaryColorProvider>
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <PrimaryColorProvider>
+              {children}
+            </PrimaryColorProvider>
+          </LanguageProvider>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

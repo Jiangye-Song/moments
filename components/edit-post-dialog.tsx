@@ -117,10 +117,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
                     fill
                     className="object-cover"
                   />
-                  <button
-                    onClick={() => handleRemoveExistingPhoto(index)}
-                    className="absolute top-1 right-1 p-1 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
+                  <button onClick={() => handleRemoveExistingPhoto(index)} className="icon-close-btn">
                     <X className="h-4 w-4 text-white" />
                   </button>
                 </div>
@@ -138,20 +135,14 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
                   <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
                     <span className="text-xs font-medium text-white bg-primary/80 px-2 py-0.5 rounded">New</span>
                   </div>
-                  <button
-                    onClick={() => handleRemoveNewPhoto(index)}
-                    className="absolute top-1 right-1 p-1 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
+                  <button onClick={() => handleRemoveNewPhoto(index)} className="icon-close-btn">
                     <X className="h-4 w-4 text-white" />
                   </button>
                 </div>
               ))}
 
               {/* Add photo button */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors"
-              >
+              <button onClick={() => fileInputRef.current?.click()} className="add-photo-btn">
                 <Plus className="h-6 w-6 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">Add</span>
               </button>

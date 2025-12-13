@@ -26,7 +26,7 @@ export const translations = {
     // Username dialog
     "welcome": "Welcome!",
     "enterNameToInteract": "Enter your username to interact with posts",
-    "usernameTip": "There's no direct way to change your username after this, so choose wisely.",
+    "usernameTip": "No password required! Everyone pick any username. But there's no direct way to change your username after login, so choose wisely.",
     "yourName": "Your Username",
     "enterYourName": "Enter your username",
     "cancel": "Cancel",
@@ -63,6 +63,13 @@ export const translations = {
     
     // Language
     "language": "Language",
+    
+    // Theme
+    "settings": "Settings",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
   },
   "zh-CN": {
     // Header
@@ -82,7 +89,7 @@ export const translations = {
     // Username dialog
     "welcome": "欢迎！",
     "enterNameToInteract": "输入您的用户名以互动",
-    "usernameTip": "用户名设定后无直接方法修改，请谨慎选择。",
+    "usernameTip": "无需密码，任何人都可以选择任何用户名！但用户名设定后无直接方法修改，请谨慎选择。",
     "yourName": "您的用户名",
     "enterYourName": "输入您的用户名",
     "cancel": "取消",
@@ -119,6 +126,13 @@ export const translations = {
     
     // Language
     "language": "语言",
+    
+    // Theme
+    "settings": "设置",
+    "theme": "主题",
+    "light": "浅色",
+    "dark": "深色",
+    "system": "跟随系统",
   },
   "zh-TW": {
     // Header
@@ -138,7 +152,7 @@ export const translations = {
     // Username dialog
     "welcome": "歡迎！",
     "enterNameToInteract": "輸入您的用戶名以互動",
-    "usernameTip": "用戶名設定後無法直接更改，請謹慎選擇。",
+    "usernameTip": "無需密碼！任何人都可以使用任何使用者名稱登入。但用戶名設定後無法直接更改，請謹慎選擇。",
     "yourName": "您的用戶名",
     "enterYourName": "輸入您的用戶名",
     "cancel": "取消",
@@ -175,6 +189,13 @@ export const translations = {
     
     // Language
     "language": "語言",
+    
+    // Theme
+    "settings": "設定",
+    "theme": "主題",
+    "light": "淺色",
+    "dark": "深色",
+    "system": "跟隨系統",
   },
   "ja": {
     // Header
@@ -194,7 +215,7 @@ export const translations = {
     // Username dialog
     "welcome": "ようこそ！",
     "enterNameToInteract": "ポストに反応するにはユーザーネームを入力してください",
-    "usernameTip": "ユーザーネームは後から変更できませんので、慎重にお選びください。",
+    "usernameTip": "パスワード不要！皆さんは好きなユーザーネームを選んでください。でも、ユーザーネームは後から変更できませんので、慎重にお選びください。",
     "yourName": "ユーザーネーム",
     "enterYourName": "ユーザーネームを入力",
     "cancel": "キャンセル",
@@ -231,6 +252,13 @@ export const translations = {
     
     // Language
     "language": "言語",
+    
+    // Theme
+    "settings": "設定",
+    "theme": "テーマ",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム設定に従う",
   },
 } as const
 

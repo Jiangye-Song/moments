@@ -103,7 +103,7 @@ export function PostInteractions({ post, adminName, onRequestUsername, onUpdate 
         <button
           onClick={handleLike}
           disabled={isLiking}
-          className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
+          className="action-btn"
         >
           {isLiking ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -114,7 +114,7 @@ export function PostInteractions({ post, adminName, onRequestUsername, onUpdate 
         </button>
         <button
           onClick={handleCommentClick}
-          className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
+          className="action-btn"
         >
           <MessageSquare className="h-4 w-4" />
           <span className="text-xs">{comments.length > 0 ? comments.length : t("comment")}</span>
@@ -253,10 +253,7 @@ function CommentItem({ comment, postId, adminName, onRequestUsername, onUpdate }
       </div>
       <div className="flex items-center gap-2">
         <span className="text-xs text-muted-foreground">{format(new Date(comment.createdAt), "MMM d, h:mm a")}</span>
-        <button
-          onClick={() => handleReplyClick()}
-          className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 ml-auto"
-        >
+        <button onClick={() => handleReplyClick()} className="action-btn text-xs ml-auto">
           <Reply className="h-3 w-3" />
           {t("reply")}
         </button>
@@ -280,10 +277,7 @@ function CommentItem({ comment, postId, adminName, onRequestUsername, onUpdate }
                 <span className="text-xs text-muted-foreground">
                   {format(new Date(reply.createdAt), "MMM d, h:mm a")}
                 </span>
-                <button
-                  onClick={() => handleReplyClick(reply.username)}
-                  className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 ml-auto"
-                >
+                <button onClick={() => handleReplyClick(reply.username)} className="action-btn text-xs ml-auto">
                   <Reply className="h-3 w-3" />
                   {t("reply")}
                 </button>

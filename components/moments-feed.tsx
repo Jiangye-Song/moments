@@ -10,7 +10,7 @@ import type { Post, ProfileSettings, PaginatedPosts } from "@/types"
 import { PostCard } from "./post-card"
 import { MomentsFeedSkeleton } from "./post-card-skeleton"
 import { UsernameDialog } from "./username-dialog"
-import { LanguageSelector } from "./language-selector"
+import { SettingsSelector } from "./settings-selector"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Toaster } from "sonner"
@@ -190,7 +190,7 @@ export function MomentsFeed() {
           </button>
           <div className={`flex items-center gap-2 ${isSearchOpen ? "flex-1 sm:flex-none" : ""}`}>
             <div className={isSearchOpen ? "hidden sm:block" : ""}>
-              <LanguageSelector />
+              <SettingsSelector />
             </div>
             {isSearchOpen ? (
               <form onSubmit={handleSearch} className="flex items-center gap-2 flex-1 sm:flex-none">
@@ -202,37 +202,33 @@ export function MomentsFeed() {
                   className="flex-1 sm:w-56 h-8 text-sm"
                   autoFocus
                 />
-                <Button type="submit" size="sm" variant="ghost" className="h-8 px-2">
+                <button type="submit" className="header-icon-btn">
                   <Search className="h-4 w-4" />
-                </Button>
-                <Button
+                </button>
+                <button
                   type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 px-2"
+                  className="header-icon-btn"
                   onClick={() => {
                     setIsSearchOpen(false)
                     clearSearch()
                   }}
                 >
                   <X className="h-4 w-4" />
-                </Button>
+                </button>
               </form>
             ) : (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 px-2"
+              <button
+                className="header-icon-btn"
                 onClick={() => setIsSearchOpen(true)}
               >
                 <Search className="h-4 w-4" />
-              </Button>
+              </button>
             )}
             <a
               href="https://void.jy-s.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className={`void-icon-outer items-center justify-center h-8 px-2 rounded-md hover:bg-accent hover:text-accent-foreground group ${isSearchOpen ? "hidden sm:inline-flex" : "inline-flex"}`}
+              className={`header-icon-btn void-icon-outer group ${isSearchOpen ? "hidden sm:inline-flex" : "inline-flex"}`}
               style={{ cursor: "default" }}
             >
               <img
@@ -249,17 +245,17 @@ export function MomentsFeed() {
           <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-2 border-t border-border/50">
             <span className="text-xs text-muted-foreground">{t("filteringBy")}</span>
             {activeSearch && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs">
+              <span className="filter-tag">
                 "{activeSearch}"
-                <button onClick={clearSearch} className="hover:text-primary/70">
+                <button onClick={clearSearch}>
                   <X className="h-3 w-3" />
                 </button>
               </span>
             )}
             {activeHashtag && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs">
+              <span className="filter-tag">
                 #{activeHashtag}
-                <button onClick={clearSearch} className="hover:text-primary/70">
+                <button onClick={clearSearch}>
                   <X className="h-3 w-3" />
                 </button>
               </span>
@@ -269,12 +265,12 @@ export function MomentsFeed() {
       </header>
 
       {/* Cover photo area */}
-      <div className="relative h-72 bg-gradient-to-b from-[#E0E2E0] to-white overflow-hidden mb-10">
+      <div className="relative h-72 overflow-hidden mb-10">
         {profile?.bannerUrl && (
-          <Image src={profile.bannerUrl || "/epty_banner.png"} alt="Banner" fill className="object-cover" />
+          <Image src={profile.bannerUrl || "/epty_banner.png"} alt="Banner" fill className="object-cover banner-image" />
         )}
         <div className="absolute bottom-4 right-4 flex items-center gap-3">
-          <span className="text-foreground font-semibold text-lg text-shadow-lg/30 text-shadow-white">{profile?.name || " "}</span>
+          <span className="text-white font-semibold text-lg drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{profile?.name || " "}</span>
           <div className="h-16 w-16 rounded-lg border-2 border-background flex items-center justify-center shadow-lg overflow-hidden">
             {profile?.avatarUrl ? (
               <Image
