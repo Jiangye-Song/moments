@@ -83,32 +83,42 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
         const photo = photosToUpload[i]
         if (!photo.file) continue
 
+        console.log(`[Upload ${i + 1}/${photosToUpload.length}] Starting upload for: ${photo.file.name} (${photo.file.type}, ${(photo.file.size / 1024).toFixed(1)}KB)`)
+
         try {
           // Get presigned URL using GET with query params (avoids body size issues)
           const params = new URLSearchParams({
             name: photo.file.name,
             type: photo.file.type,
           })
-          const presignedRes = await fetch(`/api/upload?${params}`)
+          const requestUrl = `/api/upload?${params}`
+          console.log(`[Upload ${i + 1}] Requesting presigned URL: ${requestUrl}`)
+          
+          const presignedRes = await fetch(requestUrl)
+          console.log(`[Upload ${i + 1}] Presigned URL response: ${presignedRes.status} ${presignedRes.statusText}`)
 
           if (!presignedRes.ok) {
             const contentType = presignedRes.headers.get("content-type")
+            console.log(`[Upload ${i + 1}] Error response content-type: ${contentType}`)
             if (contentType?.includes("application/json")) {
               const error = await presignedRes.json()
               throw new Error(error.error || `Failed to get upload URL (${presignedRes.status})`)
             } else {
               const text = await presignedRes.text()
+              console.log(`[Upload ${i + 1}] Error response body: ${text}`)
               throw new Error(`Server error (${presignedRes.status}): ${text.slice(0, 50)}`)
             }
           }
 
           const uploadInfo = await presignedRes.json()
+          console.log(`[Upload ${i + 1}] Got presigned URL, uploading to B2...`)
           
           if (!uploadInfo?.presignedUrl) {
             throw new Error("Invalid upload URL received")
           }
 
           // Upload to B2 using presigned URL
+          console.log(`[Upload ${i + 1}] Uploading file to B2...`)
           const uploadRes = await fetch(uploadInfo.presignedUrl, {
             method: "PUT",
             body: photo.file,
@@ -116,17 +126,21 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
               "Content-Type": photo.file.type,
             },
           })
+          console.log(`[Upload ${i + 1}] B2 response: ${uploadRes.status} ${uploadRes.statusText}`)
 
           if (!uploadRes.ok) {
+            const errorText = await uploadRes.text().catch(() => "")
+            console.error(`[Upload ${i + 1}] B2 error:`, errorText)
             throw new Error(`B2 upload failed with status ${uploadRes.status}`)
           }
 
+          console.log(`[Upload ${i + 1}] Success! Public URL: ${uploadInfo.publicUrl}`)
           uploadedPhotos.push({
             id: crypto.randomUUID(),
             url: uploadInfo.publicUrl,
           })
         } catch (uploadError) {
-          console.error(`Upload error for ${photo.file.name}:`, uploadError)
+          console.error(`[Upload ${i + 1}] Error for ${photo.file.name}:`, uploadError)
           failedUploads.push(photo.file.name)
         }
 

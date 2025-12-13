@@ -7,12 +7,19 @@ export const dynamic = "force-dynamic"
 
 // GET request with query params - avoids body size issues entirely
 export async function GET(request: Request) {
+  console.log("[Upload API] GET request received")
+  console.log("[Upload API] Full URL:", request.url)
+  console.log("[Upload API] Headers:", Object.fromEntries(request.headers.entries()))
+  
   try {
     const { searchParams } = new URL(request.url)
     const name = searchParams.get("name")
     const type = searchParams.get("type")
+    
+    console.log(`[Upload API] Params - name: ${name}, type: ${type}`)
 
     if (!name || !type) {
+      console.log("[Upload API] Missing parameters")
       return NextResponse.json(
         { error: "Missing name or type parameter" },
         { status: 400 }
@@ -28,7 +35,9 @@ export async function GET(request: Request) {
       )
     }
 
+    console.log(`[Upload API] Generating presigned URL for: ${name}`)
     const { presignedUrl, publicUrl } = await getPresignedUploadUrl(name, type)
+    console.log(`[Upload API] Generated public URL: ${publicUrl}`)
 
     return NextResponse.json({
       name,
@@ -36,7 +45,7 @@ export async function GET(request: Request) {
       publicUrl,
     })
   } catch (error) {
-    console.error("Upload URL generation error:", error)
+    console.error("[Upload API] Error:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to generate upload URL" },
       { status: 500 }
