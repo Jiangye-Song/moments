@@ -70,6 +70,10 @@ export const translations = {
     "light": "Light",
     "dark": "Dark",
     "system": "System",
+    
+    // Maintenance
+    "underMaintenance": "Under Maintenance",
+    "maintenanceMessage": "We're making some improvements. Please check back later!",
   },
   "zh-CN": {
     // Header
@@ -133,6 +137,10 @@ export const translations = {
     "light": "浅色",
     "dark": "深色",
     "system": "跟随系统",
+    
+    // Maintenance
+    "underMaintenance": "维护中",
+    "maintenanceMessage": "我们正在进行一些改进，请稍后再来！",
   },
   "zh-TW": {
     // Header
@@ -196,6 +204,10 @@ export const translations = {
     "light": "淺色",
     "dark": "深色",
     "system": "跟隨系統",
+    
+    // Maintenance
+    "underMaintenance": "維護中",
+    "maintenanceMessage": "我們正在進行一些改進，請稍後再來！",
   },
   "ja": {
     // Header
@@ -259,6 +271,10 @@ export const translations = {
     "light": "ライト",
     "dark": "ダーク",
     "system": "システム設定に従う",
+    
+    // Maintenance
+    "underMaintenance": "メンテナンス中",
+    "maintenanceMessage": "現在改善を行っています。後でまたお越しください！",
   },
 } as const
 

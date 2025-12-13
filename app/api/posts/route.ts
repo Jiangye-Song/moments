@@ -1,8 +1,25 @@
 import { NextResponse } from "next/server"
-import { getPosts, addPost } from "@/lib/posts"
+import { cookies } from "next/headers"
+import { getPosts, addPost, getMaintenanceMode } from "@/lib/posts"
 
 export async function GET(request: Request) {
   try {
+    // Check maintenance mode (allow admin to bypass)
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get("admin_session")
+    const isAdmin = !!sessionCookie?.value
+    
+    if (!isAdmin) {
+      const maintenanceEnabled = await getMaintenanceMode()
+      if (maintenanceEnabled) {
+        return NextResponse.json({ 
+          posts: [], 
+          nextCursor: null,
+          maintenance: true 
+        })
+      }
+    }
+    
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get("limit") || "10")
     const cursor = searchParams.get("cursor") || undefined

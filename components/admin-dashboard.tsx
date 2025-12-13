@@ -11,6 +11,7 @@ import { PostsManager } from "./posts-manager"
 import { CreatePostForm } from "./create-post-form"
 import { AdminLogin } from "./admin-login"
 import { ChangePasscode } from "./change-passcode"
+import { MaintenanceToggle } from "./maintenance-toggle"
 import { Toaster } from "sonner"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -167,7 +168,10 @@ export function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="security">
-            <ChangePasscode />
+            <div className="space-y-6">
+              <MaintenanceToggle />
+              <ChangePasscode />
+            </div>
           </TabsContent>
         </Tabs>
       </main>

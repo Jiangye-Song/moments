@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import Image from "next/image"
 import useSWRInfinite from "swr/infinite"
 import useSWR from "swr"
-import { Camera, User, Loader2, Search, X, WifiOff, RefreshCw } from "lucide-react"
+import { Camera, User, Loader2, Search, X, WifiOff, RefreshCw, Construction } from "lucide-react"
 import { format } from "date-fns"
 import type { Post, ProfileSettings, PaginatedPosts } from "@/types"
 import { PostCard } from "./post-card"
@@ -71,6 +71,7 @@ export function MomentsFeed() {
   const isEmpty = !pages?.[0]?.posts?.length
   const isReachingEnd = isEmpty || (pages && !pages[pages.length - 1]?.nextCursor)
   const hasNetworkError = !!error && !isLoading
+  const isMaintenanceMode = pages?.[0]?.maintenance === true
 
   // Extract primary color from banner image
   useEffect(() => {
@@ -289,8 +290,19 @@ export function MomentsFeed() {
 
       {/* Feed */}
       <main className="max-w-3xl mx-auto px-4 pb-20">
+        {/* Maintenance Mode */}
+        {isMaintenanceMode && (
+          <div className="py-12 text-center">
+            <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-amber-500/10 flex items-center justify-center">
+              <Construction className="h-10 w-10 text-amber-500" />
+            </div>
+            <h3 className="text-lg font-medium text-foreground mb-1">{t("underMaintenance")}</h3>
+            <p className="text-muted-foreground text-sm">{t("maintenanceMessage")}</p>
+          </div>
+        )}
+
         {/* Network Error */}
-        {hasNetworkError && (
+        {!isMaintenanceMode && hasNetworkError && (
           <div className="py-12 text-center">
             <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
               <WifiOff className="h-10 w-10 text-muted-foreground" />
@@ -309,9 +321,9 @@ export function MomentsFeed() {
           </div>
         )}
 
-        {isLoading && <MomentsFeedSkeleton />}
+        {!isMaintenanceMode && isLoading && <MomentsFeedSkeleton />}
 
-        {!isLoading && !hasNetworkError && posts.length === 0 && (
+        {!isMaintenanceMode && !isLoading && !hasNetworkError && posts.length === 0 && (
           <div className="py-12 text-center">
             <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
               <Camera className="h-10 w-10 text-muted-foreground" />
@@ -335,7 +347,7 @@ export function MomentsFeed() {
           </div>
         )}
 
-        {posts.length > 0 && (
+        {!isMaintenanceMode && posts.length > 0 && (
           <div>
             {groupedPosts.map((group, groupIndex) => (
               <div key={`${group.year}-${group.month}`} className="flex">

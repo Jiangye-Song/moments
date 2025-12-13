@@ -40,6 +40,7 @@ export interface PostsData {
 export interface PaginatedPosts {
   posts: Post[]
   nextCursor: string | null
+  maintenance?: boolean
 }
 
 export interface ProfileSettings {
