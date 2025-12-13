@@ -34,28 +34,28 @@ export function MomentsFeed() {
   const [activeSearch, setActiveSearch] = useState("")
   const [activeHashtag, setActiveHashtag] = useState("")
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  
+
   const getKey = useCallback((pageIndex: number, previousPageData: PaginatedPosts | null) => {
     if (previousPageData && !previousPageData.nextCursor) return null
-    
+
     let url = `/api/posts?limit=${PAGE_SIZE}`
     if (activeSearch) url += `&search=${encodeURIComponent(activeSearch)}`
     if (activeHashtag) url += `&hashtag=${encodeURIComponent(activeHashtag)}`
-    
+
     if (pageIndex === 0) return url
     return `${url}&cursor=${previousPageData?.nextCursor}`
   }, [activeSearch, activeHashtag])
 
-  const { 
-    data: pages, 
+  const {
+    data: pages,
     error,
-    isLoading, 
+    isLoading,
     isValidating,
-    mutate, 
-    size, 
-    setSize 
+    mutate,
+    size,
+    setSize
   } = useSWRInfinite<PaginatedPosts>(getKey, fetcher)
-  
+
   const { data: profile } = useSWR<ProfileSettings>("/api/profile", fetcher)
   const [usernameDialogOpen, setUsernameDialogOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
@@ -84,7 +84,7 @@ export function MomentsFeed() {
   // Intersection Observer for infinite scroll
   useEffect(() => {
     if (!loadMoreRef.current) return
-    
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !isLoadingMore && !isReachingEnd) {
@@ -141,20 +141,20 @@ export function MomentsFeed() {
   // Group posts by year and month for timeline
   const groupedPosts = useMemo(() => {
     if (!posts || posts.length === 0 || hasNetworkError) return []
-    
+
     const groups: { year: number; month: number; monthName: string; posts: Post[]; showYear: boolean; showMonth: boolean }[] = []
     let lastYear: number | null = null
     let lastMonth: number | null = null
-    
+
     posts.forEach((post) => {
       const date = new Date(post.date)
       const year = date.getFullYear()
       const month = date.getMonth()
       const monthName = format(date, "MMM")
-      
+
       const showYear = year !== lastYear
       const showMonth = year !== lastYear || month !== lastMonth
-      
+
       if (showMonth) {
         groups.push({
           year,
@@ -170,7 +170,7 @@ export function MomentsFeed() {
         groups[groups.length - 1].posts.push(post)
       }
     })
-    
+
     return groups
   }, [posts, hasNetworkError])
 
@@ -181,7 +181,13 @@ export function MomentsFeed() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <h1 className={`text-lg font-semibold text-foreground ${isSearchOpen ? "hidden sm:block" : ""}`}>{t("moments")}</h1>
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className={`flex items-center gap-2 select-none cursor-pointer ${isSearchOpen ? "hidden sm:flex" : ""}`}
+          >
+            <img src='/icon-512.png' width={32} height={32} alt="Logo" className="select-none" draggable={false} />
+            <h1 className="text-lg font-semibold text-foreground leading-none">{t("moments")}</h1>
+          </button>
           <div className={`flex items-center gap-2 ${isSearchOpen ? "flex-1 sm:flex-none" : ""}`}>
             <div className={isSearchOpen ? "hidden sm:block" : ""}>
               <LanguageSelector />
@@ -199,10 +205,10 @@ export function MomentsFeed() {
                 <Button type="submit" size="sm" variant="ghost" className="h-8 px-2">
                   <Search className="h-4 w-4" />
                 </Button>
-                <Button 
-                  type="button" 
-                  size="sm" 
-                  variant="ghost" 
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
                   className="h-8 px-2"
                   onClick={() => {
                     setIsSearchOpen(false)
@@ -213,9 +219,9 @@ export function MomentsFeed() {
                 </Button>
               </form>
             ) : (
-              <Button 
-                size="sm" 
-                variant="ghost" 
+              <Button
+                size="sm"
+                variant="ghost"
                 className="h-8 px-2"
                 onClick={() => setIsSearchOpen(true)}
               >
@@ -237,7 +243,7 @@ export function MomentsFeed() {
             </a>
           </div>
         </div>
-        
+
         {/* Active filter indicator */}
         {(activeSearch || activeHashtag) && (
           <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-2 border-t border-border/50">
@@ -295,9 +301,9 @@ export function MomentsFeed() {
             </div>
             <h3 className="text-lg font-medium text-foreground mb-1">{t("connectionError")}</h3>
             <p className="text-muted-foreground text-sm mb-4">{t("checkInternet")}</p>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => mutate()}
               className="gap-2"
             >
@@ -350,12 +356,12 @@ export function MomentsFeed() {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Timeline line */}
                 <div className="flex-shrink-0 w-px bg-border relative">
                   <div className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary" />
                 </div>
-                
+
                 {/* Posts */}
                 <div className="flex-1 pl-2 sm:pl-4 md:pl-6">
                   {group.posts.map((post) => (
@@ -371,7 +377,7 @@ export function MomentsFeed() {
                 </div>
               </div>
             ))}
-            
+
             {/* Load more trigger */}
             <div ref={loadMoreRef} className="py-8 text-center">
               {isLoadingMore && !isReachingEnd && (

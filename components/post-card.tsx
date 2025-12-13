@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { format } from "date-fns"
-import { MapPin, User } from "lucide-react"
+import { Calendar, User } from "lucide-react"
 import type { Post, ProfileSettings } from "@/types"
 import { PhotoGrid } from "./photo-grid"
 import { PhotoViewer } from "./photo-viewer"
@@ -28,7 +28,7 @@ export function PostCard({ post, profile, onRequestUsername, onUpdate, onHashtag
   }
 
   const formattedDate = format(new Date(post.date), "MMM d, yyyy")
-  const timeAgo = getTimeAgo(new Date(post.createdAt))
+  // const timeAgo = getTimeAgo(new Date(post.createdAt))
 
   return (
     <article className="border-b border-border py-4">
@@ -70,10 +70,10 @@ export function PostCard({ post, profile, onRequestUsername, onUpdate, onHashtag
           {/* Footer */}
           <div className="flex items-center justify-between mt-3">
             <div className="flex items-center gap-1 text-muted-foreground">
-              <MapPin className="h-3 w-3" />
-              <span className="text-xs">{formattedDate}</span>
+              <Calendar className="h-3 w-3" />
+              <span className="text-sm">{formattedDate}</span>
             </div>
-            <span className="text-xs text-muted-foreground">{timeAgo}</span>
+            {/* <span className="text-xs text-muted-foreground">{timeAgo}</span> */}
           </div>
 
           {/* Interactions */}
@@ -92,13 +92,13 @@ export function PostCard({ post, profile, onRequestUsername, onUpdate, onHashtag
   )
 }
 
-function getTimeAgo(date: Date): string {
-  const now = new Date()
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+// function getTimeAgo(date: Date): string {
+//   const now = new Date()
+//   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
 
-  if (diffInSeconds < 60) return "Just now"
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
-  return format(date, "MMM d")
-}
+//   if (diffInSeconds < 60) return "Just now"
+//   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+//   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+//   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
+//   return format(date, "MMM d")
+// }

@@ -3,7 +3,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* WeChat Moments inspired green theme */
 :root {
   --background: oklch(0.985 0.002 106);
   --foreground: oklch(0.145 0 0);
