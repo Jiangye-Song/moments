@@ -226,7 +226,7 @@ export function MomentsFeed() {
               href="https://void.jy-s.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className={`items-center justify-center h-8 px-2 rounded-md hover:bg-accent hover:text-accent-foreground group ${isSearchOpen ? "hidden sm:inline-flex" : "inline-flex"}`}
+              className={`void-icon-outer items-center justify-center h-8 px-2 rounded-md hover:bg-accent hover:text-accent-foreground group ${isSearchOpen ? "hidden sm:inline-flex" : "inline-flex"}`}
               style={{ cursor: "default" }}
             >
               <img

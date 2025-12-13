@@ -130,8 +130,9 @@
   transition: transform 0.3s ease;
 }
 
-.void-icon:hover {
+.void-icon-outer:hover .void-icon{
   animation: spin-infinite 1s linear infinite;
+  filter: brightness(20);
 }
 
 @keyframes spin-infinite {
