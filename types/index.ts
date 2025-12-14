@@ -44,7 +44,7 @@ export interface PaginatedPosts {
   posts: Post[]
   nextCursor: string | null
   maintenance?: boolean
-  highlightedUsernames?: string[]
+  usernameColors?: Record<string, string>
 }
 
 export interface ProfileSettings {

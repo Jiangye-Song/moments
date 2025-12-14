@@ -12,6 +12,7 @@ import { CreatePostForm } from "./create-post-form"
 import { AdminLogin } from "./admin-login"
 import { ChangePasscode } from "./change-passcode"
 import { MaintenanceToggle } from "./maintenance-toggle"
+import { SpecialUsernamesManager } from "./special-usernames-manager"
 import { Toaster } from "sonner"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -164,7 +165,10 @@ export function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="profile">
-            <ProfileEditor profile={profile} onUpdate={mutateProfile} />
+            <div className="space-y-6">
+              <ProfileEditor profile={profile} onUpdate={mutateProfile} />
+              <SpecialUsernamesManager />
+            </div>
           </TabsContent>
 
           <TabsContent value="security">

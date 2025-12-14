@@ -401,15 +401,15 @@ export async function removeLike(postId: string, username: string): Promise<bool
   return true
 }
 
-export async function checkUsernameBlacklisted(username: string): Promise<boolean> {
+export async function checkUsernameRestricted(username: string): Promise<boolean> {
   const lowerUsername = username.toLowerCase()
   
-  const blacklisted = await db
+  const restricted = await db
     .select()
     .from(specialUsernames)
-    .where(eq(specialUsernames.type, "blacklist"))
+    .where(eq(specialUsernames.restricted, "true"))
   
-  for (const entry of blacklisted) {
+  for (const entry of restricted) {
     if (entry.username.toLowerCase() === lowerUsername) {
       return true
     }
@@ -418,13 +418,18 @@ export async function checkUsernameBlacklisted(username: string): Promise<boolea
   return false
 }
 
-export async function getHighlightedUsernames(): Promise<string[]> {
-  const highlighted = await db
-    .select({ username: specialUsernames.username })
+export async function getSpecialUsernames(): Promise<Record<string, string>> {
+  const special = await db
+    .select({ username: specialUsernames.username, color: specialUsernames.color })
     .from(specialUsernames)
-    .where(eq(specialUsernames.type, "highlighted"))
   
-  return highlighted.map(h => h.username.toLowerCase())
+  const colorMap: Record<string, string> = {}
+  for (const entry of special) {
+    if (entry.color) {
+      colorMap[entry.username.toLowerCase()] = entry.color
+    }
+  }
+  return colorMap
 }
 
 export async function checkUsernameExists(username: string): Promise<boolean> {

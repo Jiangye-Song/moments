@@ -107,9 +107,9 @@ export function MomentsFeed() {
   }, [pages])
 
   // Collect highlighted usernames from the first page
-  const highlightedUsernames = useMemo(() => {
-    if (!pages || !pages[0]?.highlightedUsernames) return []
-    return pages[0].highlightedUsernames
+  const usernameColors = useMemo(() => {
+    if (!pages || !pages[0]?.usernameColors) return {}
+    return pages[0].usernameColors
   }, [pages])
 
   const isLoadingMore = isLoading || (size > 0 && pages && typeof pages[size - 1] === "undefined")
@@ -441,7 +441,7 @@ export function MomentsFeed() {
                       key={post.id}
                       post={post}
                       profile={profile}
-                      highlightedUsernames={highlightedUsernames}
+                      usernameColors={usernameColors}
                       onRequestUsername={handleRequestUsername}
                       onUpdate={() => mutate()}
                       onHashtagClick={handleHashtagClick}

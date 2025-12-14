@@ -12,12 +12,12 @@ import { toast } from "sonner"
 
 interface PostInteractionsProps {
   post: Post
-  highlightedUsernames?: string[]
+  usernameColors?: Record<string, string>
   onRequestUsername: (callback: () => void) => void
   onUpdate: () => void
 }
 
-export function PostInteractions({ post, highlightedUsernames = [], onRequestUsername, onUpdate }: PostInteractionsProps) {
+export function PostInteractions({ post, usernameColors = {}, onRequestUsername, onUpdate }: PostInteractionsProps) {
   const { t } = useLanguage()
   const [showCommentInput, setShowCommentInput] = useState(false)
   const [commentText, setCommentText] = useState("")
@@ -137,7 +137,7 @@ export function PostInteractions({ post, highlightedUsernames = [], onRequestUse
               key={comment.id} 
               comment={comment} 
               postId={post.id}
-              highlightedUsernames={highlightedUsernames}
+              usernameColors={usernameColors}
               onRequestUsername={onRequestUsername}
               onUpdate={onUpdate}
             />
@@ -173,12 +173,33 @@ export function PostInteractions({ post, highlightedUsernames = [], onRequestUse
 interface CommentItemProps {
   comment: Comment
   postId: string
-  highlightedUsernames?: string[]
+  usernameColors?: Record<string, string>
   onRequestUsername: (callback: () => void) => void
   onUpdate: () => void
 }
 
-function CommentItem({ comment, postId, highlightedUsernames = [], onRequestUsername, onUpdate }: CommentItemProps) {
+// Map color names to Tailwind classes
+const colorClasses: Record<string, string> = {
+  orange: 'text-orange-500',
+  red: 'text-red-500',
+  blue: 'text-blue-500',
+  green: 'text-green-500',
+  purple: 'text-purple-500',
+  pink: 'text-pink-500',
+  yellow: 'text-yellow-500',
+  cyan: 'text-cyan-500',
+  emerald: 'text-emerald-500',
+  violet: 'text-violet-500',
+  amber: 'text-amber-500',
+  lime: 'text-lime-500',
+  teal: 'text-teal-500',
+  indigo: 'text-indigo-500',
+  fuchsia: 'text-fuchsia-500',
+  rose: 'text-rose-500',
+  sky: 'text-sky-500',
+}
+
+function CommentItem({ comment, postId, usernameColors = {}, onRequestUsername, onUpdate }: CommentItemProps) {
   const { t } = useLanguage()
   const [showReplyInput, setShowReplyInput] = useState(false)
   const [replyText, setReplyText] = useState("")
@@ -186,8 +207,13 @@ function CommentItem({ comment, postId, highlightedUsernames = [], onRequestUser
   const [isReplying, setIsReplying] = useState(false)
 
   const replies = comment.replies || []
-  const isHighlighted = (username: string) => {
-    return highlightedUsernames.includes(username.toLowerCase())
+  
+  const getUsernameColorClass = (username: string) => {
+    const color = usernameColors[username.toLowerCase()]
+    if (color && colorClasses[color]) {
+      return colorClasses[color]
+    }
+    return 'text-primary'
   }
 
   const handleReplyClick = (targetUsername?: string) => {
@@ -250,7 +276,7 @@ function CommentItem({ comment, postId, highlightedUsernames = [], onRequestUser
     <div className="space-y-1">
       {/* Original Comment */}
       <div className="text-sm">
-        <span className={`font-medium ${isHighlighted(comment.username) ? 'text-orange-500' : 'text-primary'}`}>{comment.username}</span>
+        <span className={`font-medium ${getUsernameColorClass(comment.username)}`}>{comment.username}</span>
         <span className="text-foreground ml-1.5">{comment.text}</span>
       </div>
       <div className="flex items-center gap-2">
@@ -267,7 +293,7 @@ function CommentItem({ comment, postId, highlightedUsernames = [], onRequestUser
           {replies.map((reply) => (
             <div key={reply.id}>
               <div className="text-sm">
-                <span className={`font-medium ${isHighlighted(reply.username) ? 'text-orange-500' : 'text-primary'}`}>{reply.username}</span>
+                <span className={`font-medium ${getUsernameColorClass(reply.username)}`}>{reply.username}</span>
                 {reply.replyTo && (
                   <span className="text-muted-foreground ml-1">
                     ➜ <span className="font-medium">{reply.replyTo}</span>

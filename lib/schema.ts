@@ -37,8 +37,9 @@ export const comments = pgTable("comments", {
 
 export const specialUsernames = pgTable("special_usernames", {
   id: uuid("id").defaultRandom().primaryKey(),
-  username: text("username").notNull(),
-  type: text("type").notNull(), // 'blacklist' or 'highlighted'
+  username: text("username").notNull().unique(),
+  color: text("color"), // e.g., 'orange', 'blue', 'green', etc. Null means no highlight
+  restricted: text("restricted").notNull().default("false"), // 'true' or 'false' - restricts guests from using this name
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 

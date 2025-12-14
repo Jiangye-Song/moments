@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { checkUsernameExists, checkUsernameBlacklisted } from "@/lib/posts"
+import { checkUsernameExists, checkUsernameRestricted } from "@/lib/posts"
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -9,12 +9,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Username is required" }, { status: 400 })
   }
   
-  const blacklisted = await checkUsernameBlacklisted(username)
-  if (blacklisted) {
-    return NextResponse.json({ exists: false, blacklisted: true })
+  const restricted = await checkUsernameRestricted(username)
+  if (restricted) {
+    return NextResponse.json({ exists: false, restricted: true })
   }
   
   const exists = await checkUsernameExists(username)
   
-  return NextResponse.json({ exists, blacklisted: false })
+  return NextResponse.json({ exists, restricted: false })
 }

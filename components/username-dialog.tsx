@@ -34,7 +34,7 @@ export function UsernameDialog({ open, onComplete, onCancel }: UsernameDialogPro
       const res = await fetch(`/api/username?username=${encodeURIComponent(trimmedName)}`)
       const data = await res.json()
 
-      if (data.blacklisted) {
+      if (data.restricted) {
         setDialogState("unavailable")
       } else if (data.exists) {
         setDialogState("warning")
