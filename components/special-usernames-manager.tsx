@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import useSWR from "swr"
-import { Plus, Trash2, Loader2, User, Palette, Lock } from "lucide-react"
+import { Plus, Trash2, Loader2, User, Palette, Lock, UnlockIcon } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -290,8 +290,7 @@ export function SpecialUsernamesManager() {
                     onClick={() => handleToggleRestricted(item)}
                     className="gap-1"
                   >
-                    <Lock className="h-3 w-3" />
-                    {item.restricted === "true" ? "Restricted" : "Open"}
+                    {item.restricted === "true" ? <Lock className="h-3 w-3" /> : <UnlockIcon className="h-3 w-3" />}
                   </Button>
                   {/* Delete button */}
                   <Button
