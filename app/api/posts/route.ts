@@ -41,6 +41,7 @@ export async function POST(request: Request) {
       title: body.title || "",
       description: body.description,
       date: body.date,
+      endDate: body.endDate,
     })
     return NextResponse.json(post)
   } catch (error) {

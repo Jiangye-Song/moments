@@ -113,7 +113,12 @@ export function PostsManager({ posts, profile, onUpdate, onLoadMore, isLoadingMo
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-foreground line-clamp-2 mb-1">{post.description || "(No description)"}</p>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>{format(new Date(post.date), "MMM d, yyyy")}</span>
+                  <span>
+                    {format(new Date(post.date), "MMM d, yyyy")}
+                    {post.endDate && post.endDate !== post.date && (
+                      <> - {format(new Date(post.endDate), "MMM d, yyyy")}</>
+                    )}
+                  </span>
                   <span className="flex items-center gap-1">
                     <Heart className="h-3 w-3" />
                     {post.likes?.length || 0}

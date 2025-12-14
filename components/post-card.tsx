@@ -27,7 +27,21 @@ export function PostCard({ post, profile, onRequestUsername, onUpdate, onHashtag
     setViewerOpen(true)
   }
 
-  const formattedDate = format(new Date(post.date), "MMM d, yyyy")
+  // Format date or date range
+  const formatDateRange = () => {
+    const startDate = format(new Date(post.date), "MMM d, yyyy")
+    
+    // If no end date or end date is the same as start date, show only start date
+    if (!post.endDate || post.endDate === post.date) {
+      return startDate
+    }
+    
+    // Show date range
+    const endDate = format(new Date(post.endDate), "MMM d, yyyy")
+    return `${startDate} - ${endDate}`
+  }
+
+  const formattedDate = formatDateRange()
   // const timeAgo = getTimeAgo(new Date(post.createdAt))
 
   return (

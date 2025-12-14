@@ -28,6 +28,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
   const [title, setTitle] = useState(post.title || "")
   const [description, setDescription] = useState(post.description)
   const [date, setDate] = useState(format(new Date(post.date), "yyyy-MM-dd"))
+  const [endDate, setEndDate] = useState(post.endDate ? format(new Date(post.endDate), "yyyy-MM-dd") : "")
   const [photos, setPhotos] = useState<Photo[]>(post.photos)
   const [newPhotoPreviews, setNewPhotoPreviews] = useState<{ file: File; preview: string }[]>([])
   const [isSaving, setIsSaving] = useState(false)
@@ -98,7 +99,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
       await fetch(`/api/posts/${post.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, date, photos: allPhotos }),
+        body: JSON.stringify({ title, description, date, endDate: endDate || undefined, photos: allPhotos }),
       })
 
       // Clean up previews
@@ -202,10 +203,25 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
 
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="pl-10" />
+            <div className="flex gap-2 items-center">
+              <div className="relative flex-1">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="pl-10" />
+              </div>
+              <span className="text-muted-foreground">to</span>
+              <div className="relative flex-1">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  id="endDate" 
+                  type="date" 
+                  value={endDate} 
+                  onChange={(e) => setEndDate(e.target.value)} 
+                  className="pl-10"
+                  min={date}
+                />
+              </div>
             </div>
+            <p className="text-xs text-muted-foreground">End date is optional. Leave empty for single-day events.</p>
           </div>
         </div>
 

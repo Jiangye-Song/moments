@@ -80,6 +80,7 @@ export async function getPosts(options?: { limit?: number; cursor?: string; sear
         photos: parseJsonArray(post.photos),
         description: post.description,
         date: post.date,
+        endDate: post.endDate || undefined,
         createdAt: post.createdAt.toISOString(),
         likes: parseJsonArray(post.likes),
         hashtags: parseJsonArray(post.hashtags),
@@ -166,6 +167,7 @@ export async function addPost(post: Omit<Post, "id" | "createdAt" | "likes" | "c
     title: post.title,
     description: post.description,
     date: post.date,
+    endDate: post.endDate || null,
     photos: post.photos,
     likes: [],
     hashtags,
@@ -177,6 +179,7 @@ export async function addPost(post: Omit<Post, "id" | "createdAt" | "likes" | "c
     photos: parseJsonArray(newPost.photos),
     description: newPost.description,
     date: newPost.date,
+    endDate: newPost.endDate || undefined,
     createdAt: newPost.createdAt.toISOString(),
     likes: parseJsonArray(newPost.likes),
     hashtags: parseJsonArray(newPost.hashtags),
@@ -206,7 +209,7 @@ async function deletePhotoFromB2(url: string): Promise<void> {
 
 export async function updatePost(
   postId: string,
-  updates: Partial<Pick<Post, "title" | "description" | "date" | "photos">>,
+  updates: Partial<Pick<Post, "title" | "description" | "date" | "endDate" | "photos">>,
 ): Promise<Post | null> {
   const existingPosts = await db.select().from(posts).where(eq(posts.id, postId))
   if (existingPosts.length === 0) return null
@@ -233,6 +236,7 @@ export async function updatePost(
       ...(updates.title !== undefined && { title: updates.title }),
       ...(updates.description !== undefined && { description: updates.description }),
       ...(updates.date !== undefined && { date: updates.date }),
+      ...(updates.endDate !== undefined && { endDate: updates.endDate || null }),
       ...(updates.photos !== undefined && { photos: updates.photos }),
       ...(hashtags !== undefined && { hashtags }),
     })
@@ -247,6 +251,7 @@ export async function updatePost(
     photos: parseJsonArray(updatedPost.photos),
     description: updatedPost.description,
     date: updatedPost.date,
+    endDate: updatedPost.endDate || undefined,
     createdAt: updatedPost.createdAt.toISOString(),
     likes: parseJsonArray(updatedPost.likes),
     hashtags: parseJsonArray(updatedPost.hashtags),

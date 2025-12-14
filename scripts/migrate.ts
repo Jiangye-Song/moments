@@ -90,6 +90,12 @@ async function migrate() {
   `
   console.log("✓ Replies column ensured")
   
+  // Add end_date column for date ranges
+  await sql`
+    ALTER TABLE posts ADD COLUMN IF NOT EXISTS end_date TEXT
+  `
+  console.log("✓ End date column ensured")
+  
   console.log("\n✅ All migrations completed successfully!")
 }
 
