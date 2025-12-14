@@ -26,7 +26,7 @@ const fetcher = async (url: string) => {
   return res.json()
 }
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 4
 
 export function MomentsFeed() {
   const { t } = useLanguage()

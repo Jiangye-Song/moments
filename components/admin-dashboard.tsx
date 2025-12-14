@@ -16,7 +16,7 @@ import { Toaster } from "sonner"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 4
 
 export function AdminDashboard() {
   const [authState, setAuthState] = useState<"loading" | "setup" | "login" | "authenticated">("loading")

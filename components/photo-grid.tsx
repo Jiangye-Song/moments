@@ -103,7 +103,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
   }
 
   // 5+ photos: 3-column grid
-  const maxVisible = 9
+  const maxVisible = 6
   const remainingCount = photos.length - maxVisible
   const hasMore = remainingCount > 0
 
