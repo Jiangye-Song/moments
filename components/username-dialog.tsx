@@ -82,7 +82,7 @@ export function UsernameDialog({ open, onComplete, onCancel }: UsernameDialogPro
                 <User className="h-5 w-5 text-primary" />
                 {t("welcome")}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="items-left text-left gap-2">
                 {t("enterNameToInteract")}
                 <br />
                 <span className="text-xs text-muted-foreground/80">{t("usernameTip")}</span>
