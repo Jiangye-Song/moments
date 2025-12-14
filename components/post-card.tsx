@@ -82,14 +82,14 @@ export function PostCard({ post, profile, onRequestUsername, onUpdate, onHashtag
           <PhotoGrid photos={post.photos} onPhotoClick={handlePhotoClick} />
 
           {/* Footer */}
-          <div className="flex items-center gap-4 mt-3 text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-muted-foreground">
+            <div className="flex items-center gap-1 whitespace-nowrap">
+              <Calendar className="h-3 w-3 flex-shrink-0" />
               <span className="text-sm">{formattedDate}</span>
             </div>
             {post.location && (
-              <div className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
+              <div className="flex items-center gap-1 whitespace-nowrap">
+                <MapPin className="h-3 w-3 flex-shrink-0" />
                 <span className="text-sm">{post.location}</span>
               </div>
             )}
