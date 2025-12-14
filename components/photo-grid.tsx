@@ -86,7 +86,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
 
   if (photos.length === 2) {
     return (
-      <div className="grid grid-cols-2 gap-[1vw] max-w-[280px]">
+      <div className="grid grid-cols-2 gap-[1vw] max-w-[560px]">
         {photos.map((photo, index) => (
           <div
             key={photo.id}

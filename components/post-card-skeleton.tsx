@@ -23,7 +23,7 @@ export function PostCardSkeleton() {
           </div>
 
           {/* Photo grid skeleton */}
-          <Skeleton className="aspect-[4/3] w-full max-w-[280px] rounded-lg" />
+          <Skeleton className="aspect-[4/3] w-full max-w-[560px] rounded-lg" />
 
           {/* Footer skeleton */}
           <div className="flex items-center justify-between mt-3">

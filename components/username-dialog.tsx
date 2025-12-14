@@ -78,7 +78,7 @@ export function UsernameDialog({ open, onComplete, onCancel }: UsernameDialogPro
         {dialogState === "input" && (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-left gap-2">
                 <User className="h-5 w-5 text-primary" />
                 {t("welcome")}
               </DialogTitle>
