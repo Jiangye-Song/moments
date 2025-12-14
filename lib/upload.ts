@@ -9,10 +9,35 @@ export interface UploadProgress {
   current: number
   total: number
   percentage: number
+  stage?: 'uploading' | 'thumbnail'
 }
 
 export interface UploadProgressCallback {
   (progress: UploadProgress): void
+}
+
+/**
+ * Generate a thumbnail for an uploaded image
+ */
+async function generateThumbnail(imageUrl: string, key: string): Promise<string | null> {
+  try {
+    const response = await fetch('/api/thumbnail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl, key }),
+    })
+
+    if (!response.ok) {
+      console.error('[Thumbnail] Generation failed:', response.status)
+      return null
+    }
+
+    const { thumbnailUrl } = await response.json()
+    return thumbnailUrl
+  } catch (error) {
+    console.error('[Thumbnail] Error:', error)
+    return null
+  }
 }
 
 /**
@@ -75,9 +100,24 @@ export async function uploadPhotos(
 
       console.log(`[Upload ${i + 1}] Success! URL: ${uploadInfo.publicUrl}`)
 
+      // Extract key from the public URL for thumbnail generation
+      const urlObj = new URL(uploadInfo.publicUrl)
+      const key = urlObj.pathname.slice(1) // Remove leading slash
+
+      // Generate thumbnail (don't fail upload if thumbnail fails)
+      console.log(`[Upload ${i + 1}] Generating thumbnail...`)
+      const thumbnailUrl = await generateThumbnail(uploadInfo.publicUrl, key)
+      
+      if (thumbnailUrl) {
+        console.log(`[Upload ${i + 1}] Thumbnail generated: ${thumbnailUrl}`)
+      } else {
+        console.log(`[Upload ${i + 1}] Thumbnail generation skipped/failed`)
+      }
+
       uploadedPhotos.push({
         id: crypto.randomUUID(),
         url: uploadInfo.publicUrl,
+        thumbnailUrl: thumbnailUrl || undefined,
       })
     } catch (error) {
       console.error(`[Upload ${i + 1}] Error for ${file.name}:`, error)

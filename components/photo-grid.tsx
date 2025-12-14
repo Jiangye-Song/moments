@@ -10,6 +10,11 @@ interface PhotoGridProps {
   onPhotoClick: (index: number) => void
 }
 
+// Helper to get the best URL for grid view (prefer thumbnail)
+function getGridUrl(photo: Photo): string {
+  return photo.thumbnailUrl || photo.url || "/placeholder.svg"
+}
+
 export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
   const [showAllPhotos, setShowAllPhotos] = useState(false)
   const [isLoadingExpanded, setIsLoadingExpanded] = useState(false)
@@ -39,7 +44,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
     return (
       <div className="relative rounded-lg overflow-hidden cursor-pointer max-w-[280px]" onClick={() => onPhotoClick(0)}>
         <Image
-          src={photos[0].url || "/placeholder.svg"}
+          src={getGridUrl(photos[0])}
           alt=""
           width={280}
           height={280}
@@ -58,7 +63,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
             className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
             onClick={() => onPhotoClick(index)}
           >
-            <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
+            <Image src={getGridUrl(photo)} alt="" fill className="object-cover" />
           </div>
         ))}
       </div>
@@ -74,7 +79,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
             className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
             onClick={() => onPhotoClick(index)}
           >
-            <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
+            <Image src={getGridUrl(photo)} alt="" fill className="object-cover" />
           </div>
         ))}
       </div>
@@ -90,7 +95,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
             className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
             onClick={() => onPhotoClick(index)}
           >
-            <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
+            <Image src={getGridUrl(photo)} alt="" fill className="object-cover" />
           </div>
         ))}
       </div>
@@ -120,7 +125,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
                 }
               }}
             >
-              <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
+              <Image src={getGridUrl(photo)} alt="" fill className="object-cover" />
               {isLastVisible && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                   <span className="text-white font-bold text-lg">+{remainingCount}</span>
@@ -163,7 +168,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
                       onPhotoClick(index)
                     }}
                   >
-                    <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
+                    <Image src={getGridUrl(photo)} alt="" fill className="object-cover" />
                   </div>
                 ))
               )}

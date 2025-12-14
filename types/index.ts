@@ -1,6 +1,7 @@
 export interface Photo {
   id: string
   url: string
+  thumbnailUrl?: string // Optional thumbnail URL for grid views
   width?: number
   height?: number
 }

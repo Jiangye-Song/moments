@@ -18,6 +18,9 @@ export const s3Client = new S3Client({
   },
 })
 
+// Cache for 1 year (immutable content-addressed storage)
+const CACHE_MAX_AGE = 31536000 // 1 year in seconds
+
 export async function getPresignedUploadUrl(filename: string, contentType: string) {
   const key = `photos/${crypto.randomUUID()}-${filename}`
   
@@ -25,6 +28,8 @@ export async function getPresignedUploadUrl(filename: string, contentType: strin
     Bucket: B2_BUCKET_NAME,
     Key: key,
     ContentType: contentType,
+    // Set cache headers - browsers and CDNs will cache for 1 year
+    CacheControl: `public, max-age=${CACHE_MAX_AGE}, immutable`,
   })
 
   const presignedUrl = await getSignedUrl(s3Client, command, {
@@ -35,4 +40,26 @@ export async function getPresignedUploadUrl(filename: string, contentType: strin
   const publicUrl = `https://${B2_BUCKET_NAME}.${B2_ENDPOINT}/${key}`
 
   return { presignedUrl, publicUrl, key }
+}
+
+// Upload thumbnail directly to B2
+export async function uploadThumbnail(
+  originalKey: string,
+  thumbnailBuffer: Buffer,
+  contentType: string
+): Promise<string> {
+  // Create thumbnail key by adding -thumb suffix before extension
+  const thumbnailKey = originalKey.replace(/(\.[^.]+)$/, '-thumb$1')
+  
+  const command = new PutObjectCommand({
+    Bucket: B2_BUCKET_NAME,
+    Key: thumbnailKey,
+    Body: thumbnailBuffer,
+    ContentType: contentType,
+    CacheControl: `public, max-age=${CACHE_MAX_AGE}, immutable`,
+  })
+
+  await s3Client.send(command)
+
+  return `https://${B2_BUCKET_NAME}.${B2_ENDPOINT}/${thumbnailKey}`
 }
