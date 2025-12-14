@@ -49,6 +49,7 @@ function FadeInImage({ src, alt, fill, width, height, className = "", priority, 
       className={`${animationClass} ${isLoaded ? "loaded" : ""} ${className}`}
       onLoad={handleLoad}
       priority={priority}
+      unoptimized
     />
   )
 }

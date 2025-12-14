@@ -82,7 +82,7 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
             onClick={() => bannerInputRef.current?.click()}
           >
             {bannerUrl ? (
-              <Image src={bannerUrl || "/placeholder.svg"} alt="Banner" fill className="object-cover" />
+              <Image src={bannerUrl || "/placeholder.svg"} alt="Banner" fill className="object-cover" unoptimized />
             ) : (
               <div className="h-full w-full bg-gradient-to-b from-primary/20 to-muted" />
             )}
@@ -115,7 +115,7 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
               onClick={() => avatarInputRef.current?.click()}
             >
               {avatarUrl ? (
-                <Image src={avatarUrl || "/placeholder.svg"} alt="Avatar" fill className="object-cover" />
+                <Image src={avatarUrl || "/placeholder.svg"} alt="Avatar" fill className="object-cover" unoptimized />
               ) : (
                 <div className="h-full w-full bg-primary/10 flex items-center justify-center">
                   <User className="h-8 w-8 text-primary" />

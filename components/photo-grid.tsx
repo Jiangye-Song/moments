@@ -36,6 +36,7 @@ function FadeInImage({ src, alt, fill, width, height, className = "" }: FadeInIm
       height={height}
       className={`fade-in-image ${isLoaded ? "loaded" : ""} ${className}`}
       onLoad={handleLoad}
+      unoptimized
     />
   )
 }

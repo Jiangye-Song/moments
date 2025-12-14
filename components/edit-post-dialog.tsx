@@ -258,6 +258,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
                       alt={`Photo ${index + 1}`}
                       fill
                       className="object-cover"
+                      unoptimized
                     />
                     {isReordering && isSelected && (
                       <div className="absolute top-1 left-1 h-6 w-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
@@ -292,6 +293,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
                       alt={`New photo ${index + 1}`}
                       fill
                       className="object-cover"
+                      unoptimized
                     />
                     {!isReordering && (
                       <div className="absolute inset-0 bg-primary/20 flex items-center justify-center pointer-events-none">

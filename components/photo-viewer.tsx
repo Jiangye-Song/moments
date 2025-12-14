@@ -107,7 +107,7 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
               }`}
               onClick={() => setCurrentIndex(index)}
             >
-              <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
+              <Image src={photo.thumbnailUrl || photo.url || "/placeholder.svg"} alt="" fill className="object-cover" unoptimized />
             </button>
           ))}
         </div>

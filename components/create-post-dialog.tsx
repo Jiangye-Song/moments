@@ -281,7 +281,7 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
                     }`}
                     onClick={() => handlePhotoClick(photo.id)}
                   >
-                    <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
+                    <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" unoptimized />
                     {isReordering && isSelected && (
                       <div className="absolute top-1 left-1 h-6 w-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
                         {selectionIndex + 1}

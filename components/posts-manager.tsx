@@ -102,7 +102,7 @@ export function PostsManager({ posts, profile, onUpdate, onLoadMore, isLoadingMo
                 {/* Thumbnail */}
                 {post.photos[0] && (
                   <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
-                    <Image src={post.photos[0].url || "/placeholder.svg"} alt="" fill className="object-cover" />
+                    <Image src={post.photos[0].thumbnailUrl || post.photos[0].url || "/placeholder.svg"} alt="" fill className="object-cover" unoptimized />
                     {post.photos.length > 1 && (
                       <div className="absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1 rounded">
                         +{post.photos.length - 1}

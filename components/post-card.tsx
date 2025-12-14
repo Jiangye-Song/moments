@@ -58,6 +58,7 @@ export function PostCard({ post, profile, usernameColors, onRequestUsername, onU
                 width={40}
                 height={40}
                 className="object-cover w-full h-full"
+                unoptimized
               />
             ) : (
               <User className="h-5 w-5 text-primary" />
