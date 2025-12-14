@@ -81,9 +81,18 @@ async function uploadThumbnail(originalUrl: string, thumbnailBuffer: Buffer): Pr
 
 async function main() {
   const sql = neon(DATABASE_URL)
+  
+  // Check for --force flag
+  const forceRegenerate = process.argv.includes('--force')
 
   console.log("🖼️  Thumbnail Generation Script")
-  console.log("================================\n")
+  console.log("================================")
+  if (forceRegenerate) {
+    console.log("⚠️  Force mode: regenerating ALL thumbnails\n")
+  } else {
+    console.log("ℹ️  Normal mode: skipping existing thumbnails")
+    console.log("   Use --force to regenerate all\n")
+  }
 
   // Fetch all posts
   const posts = await sql`SELECT id, photos FROM posts`
@@ -108,8 +117,8 @@ async function main() {
       const photo = photos[i]
       totalPhotos++
 
-      // Skip if already has thumbnail
-      if (photo.thumbnailUrl) {
+      // Skip if already has thumbnail (unless force mode)
+      if (photo.thumbnailUrl && !forceRegenerate) {
         console.log(`  [${i + 1}/${photos.length}] Skipped (already has thumbnail)`)
         skippedCount++
         continue
