@@ -13,12 +13,13 @@ import { HashtagText } from "./hashtag-text"
 interface PostCardProps {
   post: Post
   profile?: ProfileSettings
+  highlightedUsernames?: string[]
   onRequestUsername: (callback: () => void) => void
   onUpdate: () => void
   onHashtagClick?: (hashtag: string) => void
 }
 
-export function PostCard({ post, profile, onRequestUsername, onUpdate, onHashtagClick }: PostCardProps) {
+export function PostCard({ post, profile, highlightedUsernames, onRequestUsername, onUpdate, onHashtagClick }: PostCardProps) {
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
 
@@ -96,7 +97,7 @@ export function PostCard({ post, profile, onRequestUsername, onUpdate, onHashtag
           </div>
 
           {/* Interactions */}
-          <PostInteractions post={post} adminName={profile?.name} onRequestUsername={onRequestUsername} onUpdate={onUpdate} />
+          <PostInteractions post={post} highlightedUsernames={highlightedUsernames} onRequestUsername={onRequestUsername} onUpdate={onUpdate} />
         </div>
       </div>
 

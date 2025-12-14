@@ -102,6 +102,23 @@ async function migrate() {
   `
   console.log("✓ Location column ensured")
   
+  // Create special usernames table (for blacklist and highlighted users)
+  await sql`
+    CREATE TABLE IF NOT EXISTS special_usernames (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      username TEXT NOT NULL,
+      type TEXT NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `
+  console.log("✓ Special usernames table created")
+  
+  // Create index for faster lookups by type
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_special_usernames_type ON special_usernames(type)
+  `
+  console.log("✓ Index on special_usernames created")
+  
   console.log("\n✅ All migrations completed successfully!")
 }
 

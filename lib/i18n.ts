@@ -26,7 +26,7 @@ export const translations = {
     // Username dialog
     "welcome": "Welcome!",
     "enterNameToInteract": "Enter your username to interact with posts",
-    "usernameTip": "No password required! Everyone pick any username. But there's no direct way to change your username after login, so choose wisely.",
+    "usernameTip": "No password required! But there's no direct way to change your username after login, so choose wisely.",
     "yourName": "Your Username",
     "enterYourName": "Enter your username",
     "cancel": "Cancel",
@@ -38,6 +38,9 @@ export const translations = {
     "nameUsedDescription": "You may ignore this message and continue if this is your username. Otherwise, a different username is recommended to avoid confusion.",
     "chooseDifferentName": "Choose Different Name",
     "continueAnyway": "Continue Anyway",
+    "nameUnavailable": "Name Unavailable",
+    "nameUnavailableDescription": "is not available for use.",
+    "nameUnavailableSuggestion": "Please choose a different username.",
     
     // Feed
     "connectionError": "Connection Error",
@@ -93,7 +96,7 @@ export const translations = {
     // Username dialog
     "welcome": "欢迎！",
     "enterNameToInteract": "输入您的用户名以互动",
-    "usernameTip": "无需密码，任何人都可以选择任何用户名！但用户名设定后无直接方法修改，请谨慎选择。",
+    "usernameTip": "无需密码！但用户名设定后无直接方法修改，请谨慎选择。",
     "yourName": "您的用户名",
     "enterYourName": "输入您的用户名",
     "cancel": "取消",
@@ -105,6 +108,9 @@ export const translations = {
     "nameUsedDescription": "若这是您的用户名，则可以忽略这条消息并继续。否则，建议选择其他用户名以避免混淆。",
     "chooseDifferentName": "选择其他名字",
     "continueAnyway": "仍要使用",
+    "nameUnavailable": "名称不可用",
+    "nameUnavailableDescription": "无法使用。",
+    "nameUnavailableSuggestion": "请选择其他用户名。",
     
     // Feed
     "connectionError": "连接错误",
@@ -160,7 +166,7 @@ export const translations = {
     // Username dialog
     "welcome": "歡迎！",
     "enterNameToInteract": "輸入您的用戶名以互動",
-    "usernameTip": "無需密碼！任何人都可以使用任何使用者名稱登入。但用戶名設定後無法直接更改，請謹慎選擇。",
+    "usernameTip": "無需密碼！但用戶名設定後無法直接更改，請謹慎選擇。",
     "yourName": "您的用戶名",
     "enterYourName": "輸入您的用戶名",
     "cancel": "取消",
@@ -169,6 +175,9 @@ export const translations = {
     "verifyingName": "正在驗證您的用戶名",
     "nameAlreadyUsed": "用戶名已被使用",
     "nameUsedBefore": "之前已被他人使用。",
+    "nameUnavailable": "名稱無法使用",
+    "nameUnavailableDescription": "無法使用。",
+    "nameUnavailableSuggestion": "請選擇其他用戶名。",
     "nameUsedDescription": "如果這是您的用戶名，可以忽略此消息並繼續。否則，建議選擇其他名字以避免混淆。",
     "chooseDifferentName": "選擇其他名字",
     "continueAnyway": "繼續使用",
@@ -227,7 +236,7 @@ export const translations = {
     // Username dialog
     "welcome": "ようこそ！",
     "enterNameToInteract": "ポストに反応するにはユーザーネームを入力してください",
-    "usernameTip": "パスワード不要！皆さんは好きなユーザーネームを選んでください。でも、ユーザーネームは後から変更できませんので、慎重にお選びください。",
+    "usernameTip": "パスワード不要！でも、ユーザーネームは後から変更できませんので、慎重にお選びください。",
     "yourName": "ユーザーネーム",
     "enterYourName": "ユーザーネームを入力",
     "cancel": "キャンセル",
@@ -236,6 +245,9 @@ export const translations = {
     "verifyingName": "ユーザーネームを確認しています",
     "nameAlreadyUsed": "このユーザーネームは使用済みです",
     "nameUsedBefore": "は既に使用されています。",
+    "nameUnavailable": "使用できない名前",
+    "nameUnavailableDescription": "は使用できません。",
+    "nameUnavailableSuggestion": "別のユーザーネームをお選びください。",
     "nameUsedDescription": "これがあなたのユーザーネームであれば、このまま無視してお進みいただけます。そうでなければ、混乱を避けるため別のユーザーネームをお選びいただくことをお勧めします。",
     "chooseDifferentName": "別のユーザーネームを選ぶ",
     "continueAnyway": "このまま続ける",

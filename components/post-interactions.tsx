@@ -12,12 +12,12 @@ import { toast } from "sonner"
 
 interface PostInteractionsProps {
   post: Post
-  adminName?: string
+  highlightedUsernames?: string[]
   onRequestUsername: (callback: () => void) => void
   onUpdate: () => void
 }
 
-export function PostInteractions({ post, adminName, onRequestUsername, onUpdate }: PostInteractionsProps) {
+export function PostInteractions({ post, highlightedUsernames = [], onRequestUsername, onUpdate }: PostInteractionsProps) {
   const { t } = useLanguage()
   const [showCommentInput, setShowCommentInput] = useState(false)
   const [commentText, setCommentText] = useState("")
@@ -137,7 +137,7 @@ export function PostInteractions({ post, adminName, onRequestUsername, onUpdate 
               key={comment.id} 
               comment={comment} 
               postId={post.id}
-              adminName={adminName}
+              highlightedUsernames={highlightedUsernames}
               onRequestUsername={onRequestUsername}
               onUpdate={onUpdate}
             />
@@ -173,12 +173,12 @@ export function PostInteractions({ post, adminName, onRequestUsername, onUpdate 
 interface CommentItemProps {
   comment: Comment
   postId: string
-  adminName?: string
+  highlightedUsernames?: string[]
   onRequestUsername: (callback: () => void) => void
   onUpdate: () => void
 }
 
-function CommentItem({ comment, postId, adminName, onRequestUsername, onUpdate }: CommentItemProps) {
+function CommentItem({ comment, postId, highlightedUsernames = [], onRequestUsername, onUpdate }: CommentItemProps) {
   const { t } = useLanguage()
   const [showReplyInput, setShowReplyInput] = useState(false)
   const [replyText, setReplyText] = useState("")
@@ -186,7 +186,9 @@ function CommentItem({ comment, postId, adminName, onRequestUsername, onUpdate }
   const [isReplying, setIsReplying] = useState(false)
 
   const replies = comment.replies || []
-  const isAdmin = (username: string) => adminName && username === adminName
+  const isHighlighted = (username: string) => {
+    return highlightedUsernames.includes(username.toLowerCase())
+  }
 
   const handleReplyClick = (targetUsername?: string) => {
     if (!hasUsername()) {
@@ -248,7 +250,7 @@ function CommentItem({ comment, postId, adminName, onRequestUsername, onUpdate }
     <div className="space-y-1">
       {/* Original Comment */}
       <div className="text-sm">
-        <span className={`font-medium ${isAdmin(comment.username) ? 'text-orange-500' : 'text-primary'}`}>{comment.username}</span>
+        <span className={`font-medium ${isHighlighted(comment.username) ? 'text-orange-500' : 'text-primary'}`}>{comment.username}</span>
         <span className="text-foreground ml-1.5">{comment.text}</span>
       </div>
       <div className="flex items-center gap-2">
@@ -265,7 +267,7 @@ function CommentItem({ comment, postId, adminName, onRequestUsername, onUpdate }
           {replies.map((reply) => (
             <div key={reply.id}>
               <div className="text-sm">
-                <span className={`font-medium ${isAdmin(reply.username) ? 'text-orange-500' : 'text-primary'}`}>{reply.username}</span>
+                <span className={`font-medium ${isHighlighted(reply.username) ? 'text-orange-500' : 'text-primary'}`}>{reply.username}</span>
                 {reply.replyTo && (
                   <span className="text-muted-foreground ml-1">
                     ➜ <span className="font-medium">{reply.replyTo}</span>

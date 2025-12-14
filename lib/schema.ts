@@ -35,6 +35,13 @@ export const comments = pgTable("comments", {
   replies: jsonb("replies").$type<{ id: string; username: string; text: string; replyTo?: string; createdAt: string }[]>().notNull().default([]),
 })
 
+export const specialUsernames = pgTable("special_usernames", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  username: text("username").notNull(),
+  type: text("type").notNull(), // 'blacklist' or 'highlighted'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
 export type Post = typeof posts.$inferSelect
 export type NewPost = typeof posts.$inferInsert
 export type Comment = typeof comments.$inferSelect

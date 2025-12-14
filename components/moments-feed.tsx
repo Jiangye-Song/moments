@@ -106,6 +106,12 @@ export function MomentsFeed() {
     return pages.flatMap(page => page.posts || []).filter((post): post is Post => !!post && !!post.date)
   }, [pages])
 
+  // Collect highlighted usernames from the first page
+  const highlightedUsernames = useMemo(() => {
+    if (!pages || !pages[0]?.highlightedUsernames) return []
+    return pages[0].highlightedUsernames
+  }, [pages])
+
   const isLoadingMore = isLoading || (size > 0 && pages && typeof pages[size - 1] === "undefined")
   const isEmpty = !pages?.[0]?.posts?.length
   const isReachingEnd = isEmpty || (pages && !pages[pages.length - 1]?.nextCursor)
@@ -435,6 +441,7 @@ export function MomentsFeed() {
                       key={post.id}
                       post={post}
                       profile={profile}
+                      highlightedUsernames={highlightedUsernames}
                       onRequestUsername={handleRequestUsername}
                       onUpdate={() => mutate()}
                       onHashtagClick={handleHashtagClick}

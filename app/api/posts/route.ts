@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { getPosts, addPost, getMaintenanceMode } from "@/lib/posts"
+import { getPosts, addPost, getMaintenanceMode, getHighlightedUsernames } from "@/lib/posts"
 
 export async function GET(request: Request) {
   try {
@@ -26,8 +26,12 @@ export async function GET(request: Request) {
     const search = searchParams.get("search") || undefined
     const hashtag = searchParams.get("hashtag") || undefined
     
-    const result = await getPosts({ limit, cursor, search, hashtag })
-    return NextResponse.json(result)
+    const [result, highlightedUsernames] = await Promise.all([
+      getPosts({ limit, cursor, search, hashtag }),
+      getHighlightedUsernames()
+    ])
+    
+    return NextResponse.json({ ...result, highlightedUsernames })
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch posts" }, { status: 500 })
   }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { User, AlertTriangle, Loader2 } from "lucide-react"
+import { User, AlertTriangle, Loader2, Ban } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -15,7 +15,7 @@ interface UsernameDialogProps {
   onCancel: () => void
 }
 
-type DialogState = "input" | "checking" | "warning"
+type DialogState = "input" | "checking" | "warning" | "unavailable"
 
 export function UsernameDialog({ open, onComplete, onCancel }: UsernameDialogProps) {
   const { t } = useLanguage()
@@ -34,7 +34,9 @@ export function UsernameDialog({ open, onComplete, onCancel }: UsernameDialogPro
       const res = await fetch(`/api/username?username=${encodeURIComponent(trimmedName)}`)
       const data = await res.json()
 
-      if (data.exists) {
+      if (data.blacklisted) {
+        setDialogState("unavailable")
+      } else if (data.exists) {
         setDialogState("warning")
       } else {
         confirmUsername(trimmedName)
@@ -158,6 +160,32 @@ export function UsernameDialog({ open, onComplete, onCancel }: UsernameDialogPro
               </Button>
               <Button onClick={handleContinueAnyway}>
                 {t("continueAnyway")}
+              </Button>
+            </div>
+          </>
+        )}
+
+        {dialogState === "unavailable" && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Ban className="h-5 w-5 text-destructive" />
+                {t("nameUnavailable")}
+              </DialogTitle>
+              <DialogDescription>
+                <span className="font-semibold text-foreground">"{pendingName}"</span> {t("nameUnavailableDescription")}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="py-4 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {t("nameUnavailableSuggestion")}
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button onClick={handleBackToInput}>
+                {t("chooseDifferentName")}
               </Button>
             </div>
           </>

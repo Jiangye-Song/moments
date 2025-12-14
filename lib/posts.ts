@@ -1,6 +1,6 @@
 import { db } from "./db"
-import { posts, comments, profile, settings } from "./schema"
-import { eq, desc, ilike, or, sql } from "drizzle-orm"
+import { posts, comments, profile, settings, specialUsernames } from "./schema"
+import { eq, desc, ilike, or, sql, and } from "drizzle-orm"
 import { DeleteObjectCommand } from "@aws-sdk/client-s3"
 import { s3Client } from "./b2"
 import type { Post, ProfileSettings, Comment } from "@/types"
@@ -399,6 +399,32 @@ export async function removeLike(postId: string, username: string): Promise<bool
     .where(eq(posts.id, postId))
   
   return true
+}
+
+export async function checkUsernameBlacklisted(username: string): Promise<boolean> {
+  const lowerUsername = username.toLowerCase()
+  
+  const blacklisted = await db
+    .select()
+    .from(specialUsernames)
+    .where(eq(specialUsernames.type, "blacklist"))
+  
+  for (const entry of blacklisted) {
+    if (entry.username.toLowerCase() === lowerUsername) {
+      return true
+    }
+  }
+  
+  return false
+}
+
+export async function getHighlightedUsernames(): Promise<string[]> {
+  const highlighted = await db
+    .select({ username: specialUsernames.username })
+    .from(specialUsernames)
+    .where(eq(specialUsernames.type, "highlighted"))
+  
+  return highlighted.map(h => h.username.toLowerCase())
 }
 
 export async function checkUsernameExists(username: string): Promise<boolean> {
