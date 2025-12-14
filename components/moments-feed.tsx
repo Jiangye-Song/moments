@@ -27,14 +27,17 @@ interface FadeInImageProps {
   height?: number
   className?: string
   priority?: boolean
+  slideIn?: boolean // Use slide-in animation instead of fade
 }
 
-function FadeInImage({ src, alt, fill, width, height, className = "", priority }: FadeInImageProps) {
+function FadeInImage({ src, alt, fill, width, height, className = "", priority, slideIn }: FadeInImageProps) {
   const [isLoaded, setIsLoaded] = useState(false)
   
   const handleLoad = useCallback(() => {
     setIsLoaded(true)
   }, [])
+
+  const animationClass = slideIn ? "banner-slide-in" : "fade-in-image"
 
   return (
     <Image
@@ -43,7 +46,7 @@ function FadeInImage({ src, alt, fill, width, height, className = "", priority }
       fill={fill}
       width={width}
       height={height}
-      className={`fade-in-image ${isLoaded ? "loaded" : ""} ${className}`}
+      className={`${animationClass} ${isLoaded ? "loaded" : ""} ${className}`}
       onLoad={handleLoad}
       priority={priority}
     />
@@ -304,7 +307,7 @@ export function MomentsFeed() {
       {/* Cover photo area */}
       <div className="relative h-72 overflow-hidden mb-10">
         {profile?.bannerUrl && (
-          <FadeInImage src={profile.bannerUrl || "/epty_banner.png"} alt="Banner" fill className="object-cover banner-image" priority />
+          <FadeInImage src={profile.bannerUrl || "/epty_banner.png"} alt="Banner" fill className="object-cover" priority slideIn />
         )}
         <div className="absolute bottom-4 right-4 flex items-center gap-3">
           <span className="text-white font-semibold text-lg drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{profile?.name || " "}</span>

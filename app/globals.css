@@ -445,6 +445,22 @@
   opacity: 0.75;
 }
 
+/* Banner slide-in animation from top */
+.banner-slide-in {
+  transform: translateY(-20px);
+  opacity: 0;
+  transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+}
+
+.banner-slide-in.loaded {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.dark .banner-slide-in.loaded {
+  opacity: 0.75;
+}
+
 /* ===== Fade-in Image Animation ===== */
 
 /* Image starts invisible and fades in when loaded */
@@ -455,9 +471,4 @@
 
 .fade-in-image.loaded {
   opacity: 1;
-}
-
-/* Dark mode variant for banner fade-in */
-.dark .fade-in-image.loaded.banner-image {
-  opacity: 0.75;
 }
