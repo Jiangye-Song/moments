@@ -42,7 +42,7 @@ export function PostsManager({ posts, profile, onUpdate, onLoadMore, isLoadingMo
   // Intersection Observer for infinite scroll
   useEffect(() => {
     if (!loadMoreRef.current) return
-    
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !isLoadingMore && !isReachingEnd) {
@@ -96,42 +96,46 @@ export function PostsManager({ posts, profile, onUpdate, onLoadMore, isLoadingMo
       {posts.map((post) => (
         <Card key={post.id}>
           <CardContent className="p-4">
-            <div className="flex gap-4">
-              {/* Thumbnail */}
-              {post.photos[0] && (
-                <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
-                  <Image src={post.photos[0].url || "/placeholder.svg"} alt="" fill className="object-cover" />
-                  {post.photos.length > 1 && (
-                    <div className="absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1 rounded">
-                      +{post.photos.length - 1}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground line-clamp-2 mb-1">{post.description || "(No description)"}</p>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>
-                    {format(new Date(post.date), "MMM d, yyyy")}
-                    {post.endDate && post.endDate !== post.date && (
-                      <> - {format(new Date(post.endDate), "MMM d, yyyy")}</>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              {/* Thumbnail and Content Row for Mobile */}
+              <div className="flex gap-3 sm:contents">
+                {/* Thumbnail */}
+                {post.photos[0] && (
+                  <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+                    <Image src={post.photos[0].url || "/placeholder.svg"} alt="" fill className="object-cover" />
+                    {post.photos.length > 1 && (
+                      <div className="absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1 rounded">
+                        +{post.photos.length - 1}
+                      </div>
                     )}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Heart className="h-3 w-3" />
-                    {post.likes?.length || 0}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MessageSquare className="h-3 w-3" />
-                    {post.comments?.length || 0}
-                  </span>
+                  </div>
+                )}
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-base text-foreground line-clamp-1 sm:line-clamp-2 mb-0.5 sm:mb-1">{post.title || "(No title)"}</h1>
+                  <p className="text-sm text-foreground line-clamp-1 sm:line-clamp-2 mb-0.5 sm:mb-1">{post.description || "(No description)"}</p>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-muted-foreground">
+                    <span>
+                      {format(new Date(post.date), "MMM d, yyyy")}
+                      {post.endDate && post.endDate !== post.date && (
+                        <> - {format(new Date(post.endDate), "MMM d, yyyy")}</>
+                      )}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Heart className="h-3 w-3" />
+                      {post.likes?.length || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MessageSquare className="h-3 w-3" />
+                      {post.comments?.length || 0}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-start gap-1">
+              {/* Actions - Hidden on mobile, shown on larger screens */}
+              <div className="hidden sm:flex items-start gap-1">
                 <Button variant="ghost" size="icon" onClick={() => setEditingPost(post)}>
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -141,6 +145,24 @@ export function PostsManager({ posts, profile, onUpdate, onLoadMore, isLoadingMo
                 <Button
                   variant="ghost"
                   size="icon"
+                  onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
+                >
+                  {expandedPost === post.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              </div>
+
+              {/* Actions - Mobile: at bottom right */}
+              <div className="flex sm:hidden items-center justify-end gap-1 -mt-1">
+                <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setEditingPost(post)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setDeletingPost(post)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2"
                   onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
                 >
                   {expandedPost === post.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}

@@ -304,7 +304,7 @@ export function MomentsFeed() {
       {/* Cover photo area */}
       <div className="relative h-72 overflow-hidden mb-10">
         {profile?.bannerUrl && (
-          <Image src={profile.bannerUrl || "/epty_banner.png"} alt="Banner" fill className="object-cover banner-image" />
+          <FadeInImage src={profile.bannerUrl || "/epty_banner.png"} alt="Banner" fill className="object-cover banner-image" priority />
         )}
         <div className="absolute bottom-4 right-4 flex items-center gap-3">
           <span className="text-white font-semibold text-lg drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{profile?.name || " "}</span>
@@ -329,7 +329,7 @@ export function MomentsFeed() {
             }}
           >
             {profile?.avatarUrl ? (
-              <Image
+              <FadeInImage
                 src={profile.avatarUrl || "/epty_user.png"}
                 alt={profile.name || "Avatar"}
                 width={64}
