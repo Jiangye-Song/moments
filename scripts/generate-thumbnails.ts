@@ -44,7 +44,9 @@ async function generateThumbnail(imageUrl: string): Promise<Buffer> {
   const imageBuffer = Buffer.from(await response.arrayBuffer())
   console.log(`  Original size: ${(imageBuffer.length / 1024).toFixed(1)}KB`)
 
+  // .rotate() with no args auto-rotates based on EXIF orientation
   const thumbnailBuffer = await sharp(imageBuffer)
+    .rotate() // Auto-rotate based on EXIF orientation
     .resize(THUMBNAIL_WIDTH, THUMBNAIL_WIDTH, {
       fit: 'inside',
       withoutEnlargement: true,

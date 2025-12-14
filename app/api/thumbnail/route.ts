@@ -36,7 +36,9 @@ export async function POST(request: Request) {
     const imageBuffer = Buffer.from(await response.arrayBuffer())
 
     // Generate thumbnail using Sharp
+    // .rotate() with no args auto-rotates based on EXIF orientation
     const thumbnailBuffer = await sharp(imageBuffer)
+      .rotate() // Auto-rotate based on EXIF orientation
       .resize(THUMBNAIL_WIDTH, THUMBNAIL_WIDTH, {
         fit: 'inside', // Maintain aspect ratio, fit within bounds
         withoutEnlargement: true, // Don't upscale small images
