@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useRef } from "react"
 import Image from "next/image"
 import { format } from "date-fns"
-import { X, ImagePlus, Calendar, Loader2 } from "lucide-react"
+import { X, ImagePlus, Calendar, Loader2, ArrowUpDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import type { Photo } from "@/types"
-import { uploadPhotos } from "@/lib/upload"
+import { uploadPhotos, type UploadProgress } from "@/lib/upload"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB per file
 
@@ -30,7 +30,9 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
   const [endDate, setEndDate] = useState("")
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
+  const [isReordering, setIsReordering] = useState(false)
+  const [reorderSelection, setReorderSelection] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,12 +65,51 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
     })
   }
 
+  const handlePhotoClick = (id: string) => {
+    if (!isReordering) return
+    
+    setReorderSelection((prev) => {
+      if (prev.includes(id)) {
+        // Remove from selection if already selected
+        return prev.filter((p) => p !== id)
+      }
+      return [...prev, id]
+    })
+  }
+
+  const startReordering = () => {
+    setIsReordering(true)
+    setReorderSelection([])
+  }
+
+  const finishReordering = () => {
+    if (reorderSelection.length > 0) {
+      // Get the selected photos in the order they were tapped
+      const selectedPhotos = reorderSelection
+        .map((id) => photos.find((p) => p.id === id))
+        .filter((p): p is { id: string; url: string; file?: File } => !!p)
+      
+      // Get the remaining photos that weren't selected
+      const remainingPhotos = photos.filter((p) => !reorderSelection.includes(p.id))
+      
+      // Combine: selected photos first (in tap order), then remaining photos
+      setPhotos([...selectedPhotos, ...remainingPhotos])
+    }
+    setIsReordering(false)
+    setReorderSelection([])
+  }
+
+  const cancelReordering = () => {
+    setIsReordering(false)
+    setReorderSelection([])
+  }
+
   const handleSubmit = async () => {
     if (photos.length === 0) return
 
     setIsSubmitting(true)
     setIsUploading(true)
-    setUploadProgress(0)
+    setUploadProgress(null)
 
     try {
       const files = photos.map((p) => p.file).filter((f): f is File => !!f)
@@ -111,7 +152,7 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
     } finally {
       setIsSubmitting(false)
       setIsUploading(false)
-      setUploadProgress(0)
+      setUploadProgress(null)
     }
   }
 
@@ -176,7 +217,48 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
 
           {/* Photo upload */}
           <div className="space-y-2">
-            <Label>Photos</Label>
+            <div className="flex items-center justify-between">
+              <Label>Photos</Label>
+              {photos.length > 1 && !isReordering && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={startReordering}
+                  className="h-7 text-xs"
+                >
+                  <ArrowUpDown className="h-3 w-3 mr-1" />
+                  Reorder
+                </Button>
+              )}
+              {isReordering && (
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={cancelReordering}
+                    className="h-7 text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={finishReordering}
+                    className="h-7 text-xs"
+                  >
+                    Done
+                  </Button>
+                </div>
+              )}
+            </div>
+            {isReordering && (
+              <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                Tap photos in the order you want them. Unselected photos will be added to the end.
+              </p>
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -187,19 +269,39 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
             />
 
             <div className="grid grid-cols-3 gap-2">
-              {photos.map((photo) => (
-                <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden group">
-                  <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
-                  <button onClick={() => removePhoto(photo.id)} className="icon-close-btn">
-                    <X className="h-4 w-4 text-white" />
-                  </button>
-                </div>
-              ))}
+              {photos.map((photo) => {
+                const selectionIndex = reorderSelection.indexOf(photo.id)
+                const isSelected = selectionIndex !== -1
+                
+                return (
+                  <div 
+                    key={photo.id} 
+                    className={`relative aspect-square rounded-lg overflow-hidden group cursor-pointer ${
+                      isReordering ? 'ring-2 ring-offset-2 ' + (isSelected ? 'ring-primary' : 'ring-transparent') : ''
+                    }`}
+                    onClick={() => handlePhotoClick(photo.id)}
+                  >
+                    <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
+                    {isReordering && isSelected && (
+                      <div className="absolute top-1 left-1 h-6 w-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
+                        {selectionIndex + 1}
+                      </div>
+                    )}
+                    {!isReordering && (
+                      <button onClick={() => removePhoto(photo.id)} className="icon-close-btn">
+                        <X className="h-4 w-4 text-white" />
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
 
-              <button onClick={() => fileInputRef.current?.click()} className="add-photo-btn">
-                <ImagePlus className="h-6 w-6 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Add</span>
-              </button>
+              {!isReordering && (
+                <button onClick={() => fileInputRef.current?.click()} className="add-photo-btn">
+                  <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Add</span>
+                </button>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">{photos.length} photo{photos.length !== 1 ? 's' : ''}</p>
           </div>
@@ -207,14 +309,16 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
 
         {/* Actions */}
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={photos.length === 0 || isSubmitting}>
+          <Button onClick={handleSubmit} disabled={photos.length === 0 || isSubmitting || isReordering}>
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {isUploading ? `Uploading... ${uploadProgress}%` : "Posting..."}
+                {isUploading && uploadProgress 
+                  ? `Uploading [${uploadProgress.current}/${uploadProgress.total}]` 
+                  : "Posting..."}
               </>
             ) : (
               "Post"
