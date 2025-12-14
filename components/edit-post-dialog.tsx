@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useRef } from "react"
 import Image from "next/image"
 import { format } from "date-fns"
-import { Calendar, Loader2, Plus, X } from "lucide-react"
+import { Calendar, Loader2, Plus, X, ArrowUpDown } from "lucide-react"
 import { toast } from "sonner"
 import type { Post, Photo } from "@/types"
 import { Button } from "@/components/ui/button"
@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { uploadPhotos } from "@/lib/upload"
+import { uploadPhotos, type UploadProgress } from "@/lib/upload"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB per file
 
@@ -33,7 +33,9 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
   const [newPhotoPreviews, setNewPhotoPreviews] = useState<{ file: File; preview: string }[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
+  const [isReordering, setIsReordering] = useState(false)
+  const [reorderSelection, setReorderSelection] = useState<number[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleAddPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,6 +67,69 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
     })
   }
 
+  // Combined items for reordering (existing photos + new previews)
+  type CombinedItem = { type: 'existing'; index: number; photo: Photo } | { type: 'new'; index: number; preview: { file: File; preview: string } }
+  
+  const getCombinedItems = (): CombinedItem[] => {
+    const existingItems: CombinedItem[] = photos.map((photo, index) => ({ type: 'existing', index, photo }))
+    const newItems: CombinedItem[] = newPhotoPreviews.map((preview, index) => ({ type: 'new', index, preview }))
+    return [...existingItems, ...newItems]
+  }
+
+  const handleItemClick = (combinedIndex: number) => {
+    if (!isReordering) return
+    
+    setReorderSelection((prev) => {
+      if (prev.includes(combinedIndex)) {
+        return prev.filter((i) => i !== combinedIndex)
+      }
+      return [...prev, combinedIndex]
+    })
+  }
+
+  const startReordering = () => {
+    setIsReordering(true)
+    setReorderSelection([])
+  }
+
+  const finishReordering = () => {
+    if (reorderSelection.length > 0) {
+      const combinedItems = getCombinedItems()
+      
+      // Get selected items in tap order
+      const selectedItems = reorderSelection
+        .map((idx) => combinedItems[idx])
+        .filter((item): item is CombinedItem => !!item)
+      
+      // Get remaining items
+      const remainingItems = combinedItems.filter((_, idx) => !reorderSelection.includes(idx))
+      
+      // Combine and separate back into photos and newPhotoPreviews
+      const reorderedItems = [...selectedItems, ...remainingItems]
+      
+      const newPhotos: Photo[] = []
+      const newPreviews: { file: File; preview: string }[] = []
+      
+      for (const item of reorderedItems) {
+        if (item.type === 'existing') {
+          newPhotos.push(item.photo)
+        } else {
+          newPreviews.push(item.preview)
+        }
+      }
+      
+      setPhotos(newPhotos)
+      setNewPhotoPreviews(newPreviews)
+    }
+    setIsReordering(false)
+    setReorderSelection([])
+  }
+
+  const cancelReordering = () => {
+    setIsReordering(false)
+    setReorderSelection([])
+  }
+
   const handleSave = async () => {
     if (photos.length === 0 && newPhotoPreviews.length === 0) {
       toast.error("A post must have at least one photo")
@@ -76,7 +141,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
       let uploadedPhotos: Photo[] = []
       if (newPhotoPreviews.length > 0) {
         setIsUploading(true)
-        setUploadProgress(0)
+        setUploadProgress(null)
         
         const files = newPhotoPreviews.map((p) => p.file)
         const result = await uploadPhotos(files, setUploadProgress)
@@ -115,7 +180,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
     } finally {
       setIsSaving(false)
       setIsUploading(false)
-      setUploadProgress(0)
+      setUploadProgress(null)
     }
   }
 
@@ -130,46 +195,129 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Photos ({totalPhotos})</Label>
+            <div className="flex items-center justify-between">
+              <Label>Photos ({totalPhotos})</Label>
+              {totalPhotos > 1 && !isReordering && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={startReordering}
+                  className="h-7 text-xs"
+                >
+                  <ArrowUpDown className="h-3 w-3 mr-1" />
+                  Reorder
+                </Button>
+              )}
+              {isReordering && (
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={cancelReordering}
+                    className="h-7 text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={finishReordering}
+                    className="h-7 text-xs"
+                  >
+                    Done
+                  </Button>
+                </div>
+              )}
+            </div>
+            {isReordering && (
+              <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                Tap photos in the order you want them. Unselected photos will be added to the end.
+              </p>
+            )}
             <div className="grid grid-cols-3 gap-2">
               {/* Existing photos */}
-              {photos.map((photo, index) => (
-                <div key={photo.url} className="relative aspect-square rounded-lg overflow-hidden group">
-                  <Image
-                    src={photo.url || "/placeholder.svg"}
-                    alt={`Photo ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                  <button onClick={() => handleRemoveExistingPhoto(index)} className="icon-close-btn">
-                    <X className="h-4 w-4 text-white" />
-                  </button>
-                </div>
-              ))}
+              {photos.map((photo, index) => {
+                const combinedIndex = index
+                const selectionIndex = reorderSelection.indexOf(combinedIndex)
+                const isSelected = selectionIndex !== -1
+                
+                return (
+                  <div 
+                    key={photo.url} 
+                    className={`relative aspect-square rounded-lg overflow-hidden group cursor-pointer ${
+                      isReordering ? 'ring-2 ring-offset-2 ' + (isSelected ? 'ring-primary' : 'ring-transparent') : ''
+                    }`}
+                    onClick={() => handleItemClick(combinedIndex)}
+                  >
+                    <Image
+                      src={photo.url || "/placeholder.svg"}
+                      alt={`Photo ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                    {isReordering && isSelected && (
+                      <div className="absolute top-1 left-1 h-6 w-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
+                        {selectionIndex + 1}
+                      </div>
+                    )}
+                    {!isReordering && (
+                      <button onClick={() => handleRemoveExistingPhoto(index)} className="icon-close-btn">
+                        <X className="h-4 w-4 text-white" />
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
 
               {/* New photo previews */}
-              {newPhotoPreviews.map(({ preview }, index) => (
-                <div key={preview} className="relative aspect-square rounded-lg overflow-hidden group">
-                  <Image
-                    src={preview || "/placeholder.svg"}
-                    alt={`New photo ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                    <span className="text-xs font-medium text-white bg-primary/80 px-2 py-0.5 rounded">New</span>
+              {newPhotoPreviews.map(({ preview }, index) => {
+                const combinedIndex = photos.length + index
+                const selectionIndex = reorderSelection.indexOf(combinedIndex)
+                const isSelected = selectionIndex !== -1
+                
+                return (
+                  <div 
+                    key={preview} 
+                    className={`relative aspect-square rounded-lg overflow-hidden group cursor-pointer ${
+                      isReordering ? 'ring-2 ring-offset-2 ' + (isSelected ? 'ring-primary' : 'ring-transparent') : ''
+                    }`}
+                    onClick={() => handleItemClick(combinedIndex)}
+                  >
+                    <Image
+                      src={preview || "/placeholder.svg"}
+                      alt={`New photo ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                    {!isReordering && (
+                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center pointer-events-none">
+                        <span className="text-xs font-medium text-white bg-primary/80 px-2 py-0.5 rounded">New</span>
+                      </div>
+                    )}
+                    {isReordering && isSelected && (
+                      <div className="absolute top-1 left-1 h-6 w-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
+                        {selectionIndex + 1}
+                      </div>
+                    )}
+                    {!isReordering && (
+                      <button onClick={() => handleRemoveNewPhoto(index)} className="icon-close-btn">
+                        <X className="h-4 w-4 text-white" />
+                      </button>
+                    )}
                   </div>
-                  <button onClick={() => handleRemoveNewPhoto(index)} className="icon-close-btn">
-                    <X className="h-4 w-4 text-white" />
-                  </button>
-                </div>
-              ))}
+                )
+              })}
 
               {/* Add photo button */}
-              <button onClick={() => fileInputRef.current?.click()} className="add-photo-btn">
-                <Plus className="h-6 w-6 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Add</span>
-              </button>
+              {!isReordering && (
+                <button onClick={() => fileInputRef.current?.click()} className="add-photo-btn">
+                  <Plus className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Add</span>
+                </button>
+              )}
             </div>
             <input
               ref={fileInputRef}
@@ -226,14 +374,16 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isSaving}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
+          <Button onClick={handleSave} disabled={isSaving || isReordering}>
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {isUploading ? `Uploading... ${uploadProgress}%` : "Saving..."}
+                {isUploading && uploadProgress 
+                  ? `Uploading [${uploadProgress.current}/${uploadProgress.total}]` 
+                  : "Saving..."}
               </>
             ) : (
               "Save Changes"
