@@ -42,12 +42,17 @@ export async function getPosts(options?: { limit?: number; cursor?: string; sear
   const search = options?.search?.toLowerCase()
   const hashtag = options?.hashtag?.toLowerCase()
   
-  let dbPosts = await db.select().from(posts).orderBy(desc(posts.createdAt)).limit(100) // Get more for filtering
+  // Order by event date (desc) so latest events appear first, then by createdAt for same-date posts
+  let dbPosts = await db.select().from(posts).orderBy(desc(posts.date), desc(posts.createdAt)).limit(100) // Get more for filtering
   
-  // Filter by cursor
+  // Filter by cursor (now using date + createdAt for pagination)
   if (cursor) {
-    const cursorDate = new Date(cursor)
-    dbPosts = dbPosts.filter(post => post.createdAt < cursorDate)
+    const [cursorDate, cursorCreatedAt] = cursor.split('|')
+    dbPosts = dbPosts.filter(post => {
+      if (post.date < cursorDate) return true
+      if (post.date === cursorDate && post.createdAt < new Date(cursorCreatedAt)) return true
+      return false
+    })
   }
   
   // Filter by search query (searches in title and description)
@@ -96,7 +101,7 @@ export async function getPosts(options?: { limit?: number; cursor?: string; sear
   )
   
   const nextCursor = hasMore && postsToReturn.length > 0 
-    ? postsToReturn[postsToReturn.length - 1].createdAt.toISOString()
+    ? `${postsToReturn[postsToReturn.length - 1].date}|${postsToReturn[postsToReturn.length - 1].createdAt.toISOString()}`
     : null
   
   return { posts: result, nextCursor }
