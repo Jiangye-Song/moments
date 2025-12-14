@@ -444,3 +444,20 @@
 .dark .banner-image {
   opacity: 0.75;
 }
+
+/* ===== Fade-in Image Animation ===== */
+
+/* Image starts invisible and fades in when loaded */
+.fade-in-image {
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+}
+
+.fade-in-image.loaded {
+  opacity: 1;
+}
+
+/* Dark mode variant for banner fade-in */
+.dark .fade-in-image.loaded.banner-image {
+  opacity: 0.75;
+}

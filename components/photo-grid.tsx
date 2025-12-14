@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { X } from "lucide-react"
 import type { Photo } from "@/types"
@@ -8,6 +8,36 @@ import type { Photo } from "@/types"
 interface PhotoGridProps {
   photos: Photo[]
   onPhotoClick: (index: number) => void
+}
+
+// Fade-in image component
+interface FadeInImageProps {
+  src: string
+  alt: string
+  fill?: boolean
+  width?: number
+  height?: number
+  className?: string
+}
+
+function FadeInImage({ src, alt, fill, width, height, className = "" }: FadeInImageProps) {
+  const [isLoaded, setIsLoaded] = useState(false)
+  
+  const handleLoad = useCallback(() => {
+    setIsLoaded(true)
+  }, [])
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill={fill}
+      width={width}
+      height={height}
+      className={`fade-in-image ${isLoaded ? "loaded" : ""} ${className}`}
+      onLoad={handleLoad}
+    />
+  )
 }
 
 // Helper to get the best URL for grid view (prefer thumbnail)
@@ -43,7 +73,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
   if (photos.length === 1) {
     return (
       <div className="relative rounded-lg overflow-hidden cursor-pointer max-w-[280px]" onClick={() => onPhotoClick(0)}>
-        <Image
+        <FadeInImage
           src={getGridUrl(photos[0])}
           alt=""
           width={280}
@@ -63,7 +93,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
             className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
             onClick={() => onPhotoClick(index)}
           >
-            <Image src={getGridUrl(photo)} alt="" fill className="object-cover" />
+            <FadeInImage src={getGridUrl(photo)} alt="" fill className="object-cover" />
           </div>
         ))}
       </div>
@@ -79,7 +109,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
             className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
             onClick={() => onPhotoClick(index)}
           >
-            <Image src={getGridUrl(photo)} alt="" fill className="object-cover" />
+            <FadeInImage src={getGridUrl(photo)} alt="" fill className="object-cover" />
           </div>
         ))}
       </div>
@@ -95,7 +125,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
             className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
             onClick={() => onPhotoClick(index)}
           >
-            <Image src={getGridUrl(photo)} alt="" fill className="object-cover" />
+            <FadeInImage src={getGridUrl(photo)} alt="" fill className="object-cover" />
           </div>
         ))}
       </div>
@@ -125,7 +155,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
                 }
               }}
             >
-              <Image src={getGridUrl(photo)} alt="" fill className="object-cover" />
+              <FadeInImage src={getGridUrl(photo)} alt="" fill className="object-cover" />
               {isLastVisible && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                   <span className="text-white font-bold text-lg">+{remainingCount}</span>
@@ -168,7 +198,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
                       onPhotoClick(index)
                     }}
                   >
-                    <Image src={getGridUrl(photo)} alt="" fill className="object-cover" />
+                    <FadeInImage src={getGridUrl(photo)} alt="" fill className="object-cover" />
                   </div>
                 ))
               )}

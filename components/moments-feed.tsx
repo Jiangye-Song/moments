@@ -18,6 +18,38 @@ import { Toaster } from "sonner"
 import { useLanguage } from "@/lib/language-context"
 import { usePrimaryColor } from "@/lib/primary-color-context"
 
+// Fade-in image component
+interface FadeInImageProps {
+  src: string
+  alt: string
+  fill?: boolean
+  width?: number
+  height?: number
+  className?: string
+  priority?: boolean
+}
+
+function FadeInImage({ src, alt, fill, width, height, className = "", priority }: FadeInImageProps) {
+  const [isLoaded, setIsLoaded] = useState(false)
+  
+  const handleLoad = useCallback(() => {
+    setIsLoaded(true)
+  }, [])
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill={fill}
+      width={width}
+      height={height}
+      className={`fade-in-image ${isLoaded ? "loaded" : ""} ${className}`}
+      onLoad={handleLoad}
+      priority={priority}
+    />
+  )
+}
+
 const fetcher = async (url: string) => {
   const res = await fetch(url)
   if (!res.ok) {
