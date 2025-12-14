@@ -5,8 +5,14 @@ export interface UploadResult {
   failedUploads: string[]
 }
 
+export interface UploadProgress {
+  current: number
+  total: number
+  percentage: number
+}
+
 export interface UploadProgressCallback {
-  (progress: number): void
+  (progress: UploadProgress): void
 }
 
 /**
@@ -80,7 +86,11 @@ export async function uploadPhotos(
 
     // Report progress
     if (onProgress) {
-      onProgress(Math.round(((i + 1) / files.length) * 100))
+      onProgress({
+        current: i + 1,
+        total: files.length,
+        percentage: Math.round(((i + 1) / files.length) * 100)
+      })
     }
   }
 
