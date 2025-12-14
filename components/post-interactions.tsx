@@ -125,7 +125,18 @@ export function PostInteractions({ post, usernameColors = {}, onRequestUsername,
       {likes.length > 0 && (
         <div className="flex items-center gap-1 text-xs">
           <Heart className="h-3 w-3 text-primary fill-primary" />
-          <span className="text-foreground font-medium">{likes.join(", ")}</span>
+          <span className="text-foreground font-medium">
+            {likes.map((username, index) => {
+              const color = usernameColors[username.toLowerCase()]
+              const colorClass = color && colorClasses[color] ? colorClasses[color] : ''
+              return (
+                <span key={username}>
+                  <span className={colorClass}>{username}</span>
+                  {index < likes.length - 1 && ", "}
+                </span>
+              )
+            })}
+          </span>
         </div>
       )}
 

@@ -21,8 +21,32 @@ export const s3Client = new S3Client({
 // Cache for 1 year (immutable content-addressed storage)
 const CACHE_MAX_AGE = 31536000 // 1 year in seconds
 
+// Sanitize filename to be URL-safe while preserving extension
+function sanitizeFilename(filename: string): string {
+  // Get the file extension
+  const lastDot = filename.lastIndexOf('.')
+  const extension = lastDot > 0 ? filename.slice(lastDot).toLowerCase() : ''
+  const baseName = lastDot > 0 ? filename.slice(0, lastDot) : filename
+  
+  // Convert the base name to a safe version:
+  // - Replace spaces with underscores
+  // - Remove or replace unsafe characters
+  // - Keep alphanumeric, underscores, and hyphens
+  const safeName = baseName
+    .replace(/\s+/g, '_')  // Replace spaces with underscores
+    .replace(/[^a-zA-Z0-9_\-]/g, '')  // Remove non-alphanumeric except _ and -
+    .slice(0, 50) // Limit length
+  
+  // If the name became empty after sanitization, use a generic name
+  const finalName = safeName || 'image'
+  
+  return `${finalName}${extension}`
+}
+
 export async function getPresignedUploadUrl(filename: string, contentType: string) {
-  const key = `photos/${crypto.randomUUID()}-${filename}`
+  // Sanitize the filename to be URL-safe
+  const safeFilename = sanitizeFilename(filename)
+  const key = `photos/${crypto.randomUUID()}-${safeFilename}`
   
   const command = new PutObjectCommand({
     Bucket: B2_BUCKET_NAME,
@@ -36,7 +60,7 @@ export async function getPresignedUploadUrl(filename: string, contentType: strin
     expiresIn: 3600, // 1 hour
   })
 
-  // Public URL for the file after upload
+  // Public URL for the file after upload (key is already safe, no encoding needed)
   const publicUrl = `https://${B2_BUCKET_NAME}.${B2_ENDPOINT}/${key}`
 
   return { presignedUrl, publicUrl, key }
