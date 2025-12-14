@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { format } from "date-fns"
-import { Calendar, User } from "lucide-react"
+import { Calendar, User, MapPin } from "lucide-react"
 import type { Post, ProfileSettings } from "@/types"
 import { PhotoGrid } from "./photo-grid"
 import { PhotoViewer } from "./photo-viewer"
@@ -82,12 +82,17 @@ export function PostCard({ post, profile, onRequestUsername, onUpdate, onHashtag
           <PhotoGrid photos={post.photos} onPhotoClick={handlePhotoClick} />
 
           {/* Footer */}
-          <div className="flex items-center justify-between mt-3">
-            <div className="flex items-center gap-1 text-muted-foreground">
+          <div className="flex items-center gap-4 mt-3 text-muted-foreground">
+            <div className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               <span className="text-sm">{formattedDate}</span>
             </div>
-            {/* <span className="text-xs text-muted-foreground">{timeAgo}</span> */}
+            {post.location && (
+              <div className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                <span className="text-sm">{post.location}</span>
+              </div>
+            )}
           </div>
 
           {/* Interactions */}

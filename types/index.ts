@@ -29,6 +29,7 @@ export interface Post {
   description: string
   date: string
   endDate?: string  // Optional end date for date ranges
+  location?: string  // Optional location
   createdAt: string
   likes: string[] // Array of usernames who liked
   comments: Comment[]

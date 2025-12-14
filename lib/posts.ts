@@ -86,6 +86,7 @@ export async function getPosts(options?: { limit?: number; cursor?: string; sear
         description: post.description,
         date: post.date,
         endDate: post.endDate || undefined,
+        location: post.location || undefined,
         createdAt: post.createdAt.toISOString(),
         likes: parseJsonArray(post.likes),
         hashtags: parseJsonArray(post.hashtags),
@@ -173,6 +174,7 @@ export async function addPost(post: Omit<Post, "id" | "createdAt" | "likes" | "c
     description: post.description,
     date: post.date,
     endDate: post.endDate || null,
+    location: post.location || null,
     photos: post.photos,
     likes: [],
     hashtags,
@@ -185,6 +187,7 @@ export async function addPost(post: Omit<Post, "id" | "createdAt" | "likes" | "c
     description: newPost.description,
     date: newPost.date,
     endDate: newPost.endDate || undefined,
+    location: newPost.location || undefined,
     createdAt: newPost.createdAt.toISOString(),
     likes: parseJsonArray(newPost.likes),
     hashtags: parseJsonArray(newPost.hashtags),
@@ -214,7 +217,7 @@ async function deletePhotoFromB2(url: string): Promise<void> {
 
 export async function updatePost(
   postId: string,
-  updates: Partial<Pick<Post, "title" | "description" | "date" | "endDate" | "photos">>,
+  updates: Partial<Pick<Post, "title" | "description" | "date" | "endDate" | "location" | "photos">>,
 ): Promise<Post | null> {
   const existingPosts = await db.select().from(posts).where(eq(posts.id, postId))
   if (existingPosts.length === 0) return null
@@ -242,6 +245,7 @@ export async function updatePost(
       ...(updates.description !== undefined && { description: updates.description }),
       ...(updates.date !== undefined && { date: updates.date }),
       ...(updates.endDate !== undefined && { endDate: updates.endDate || null }),
+      ...(updates.location !== undefined && { location: updates.location || null }),
       ...(updates.photos !== undefined && { photos: updates.photos }),
       ...(hashtags !== undefined && { hashtags }),
     })
@@ -257,6 +261,7 @@ export async function updatePost(
     description: updatedPost.description,
     date: updatedPost.date,
     endDate: updatedPost.endDate || undefined,
+    location: updatedPost.location || undefined,
     createdAt: updatedPost.createdAt.toISOString(),
     likes: parseJsonArray(updatedPost.likes),
     hashtags: parseJsonArray(updatedPost.hashtags),

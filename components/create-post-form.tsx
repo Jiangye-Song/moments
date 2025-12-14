@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useRef } from "react"
 import Image from "next/image"
 import { format } from "date-fns"
-import { X, ImagePlus, Calendar, Loader2, Check, ArrowUpDown } from "lucide-react"
+import { X, ImagePlus, Calendar, Loader2, Check, ArrowUpDown, MapPin } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -24,6 +24,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
   const [description, setDescription] = useState("")
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"))
   const [endDate, setEndDate] = useState("")
+  const [location, setLocation] = useState("")
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -130,6 +131,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
           description,
           date,
           endDate: endDate || undefined,
+          location: location || undefined,
         }),
       })
 
@@ -139,6 +141,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
       setDescription("")
       setDate(format(new Date(), "yyyy-MM-dd"))
       setEndDate("")
+      setLocation("")
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
       onCreated()
@@ -204,6 +207,21 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground">End date is optional. Leave empty for single-day events.</p>
+        </div>
+
+        {/* Location */}
+        <div className="space-y-2">
+          <Label htmlFor="location">Location</Label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="location"
+              placeholder="Add a location (optional)"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </div>
 
         {/* Photo upload */}

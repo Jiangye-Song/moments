@@ -19,6 +19,7 @@ export const posts = pgTable("posts", {
   description: text("description").notNull(),
   date: text("date").notNull(),
   endDate: text("end_date"),  // Optional end date for date ranges
+  location: text("location"),  // Optional location
   createdAt: timestamp("created_at").defaultNow().notNull(),
   photos: jsonb("photos").$type<{ id: string; url: string; width?: number; height?: number }[]>().notNull().default([]),
   likes: jsonb("likes").$type<string[]>().notNull().default([]),

@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useRef } from "react"
 import Image from "next/image"
 import { format } from "date-fns"
-import { Calendar, Loader2, Plus, X, ArrowUpDown } from "lucide-react"
+import { Calendar, Loader2, Plus, X, ArrowUpDown, MapPin } from "lucide-react"
 import { toast } from "sonner"
 import type { Post, Photo } from "@/types"
 import { Button } from "@/components/ui/button"
@@ -29,6 +29,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
   const [description, setDescription] = useState(post.description)
   const [date, setDate] = useState(format(new Date(post.date), "yyyy-MM-dd"))
   const [endDate, setEndDate] = useState(post.endDate ? format(new Date(post.endDate), "yyyy-MM-dd") : "")
+  const [location, setLocation] = useState(post.location || "")
   const [photos, setPhotos] = useState<Photo[]>(post.photos)
   const [newPhotoPreviews, setNewPhotoPreviews] = useState<{ file: File; preview: string }[]>([])
   const [isSaving, setIsSaving] = useState(false)
@@ -164,7 +165,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
       await fetch(`/api/posts/${post.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, date, endDate: endDate || undefined, photos: allPhotos }),
+        body: JSON.stringify({ title, description, date, endDate: endDate || undefined, location: location || undefined, photos: allPhotos }),
       })
 
       // Clean up previews
@@ -370,6 +371,20 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
               </div>
             </div>
             <p className="text-xs text-muted-foreground">End date is optional. Leave empty for single-day events.</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="location"
+                placeholder="Add a location (optional)"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
         </div>
 

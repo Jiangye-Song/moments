@@ -96,6 +96,12 @@ async function migrate() {
   `
   console.log("✓ End date column ensured")
   
+  // Add location column for post locations
+  await sql`
+    ALTER TABLE posts ADD COLUMN IF NOT EXISTS location TEXT
+  `
+  console.log("✓ Location column ensured")
+  
   console.log("\n✅ All migrations completed successfully!")
 }
 
