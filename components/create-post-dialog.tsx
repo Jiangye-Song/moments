@@ -193,12 +193,12 @@ export function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogPr
           {/* Date picker */}
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
-            <div className="flex gap-2 items-center">
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
               <div className="relative flex-1">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="pl-10" />
               </div>
-              <span className="text-muted-foreground">to</span>
+              <span className="text-muted-foreground text-sm">to</span>
               <div className="relative flex-1">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
