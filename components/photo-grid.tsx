@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { X } from "lucide-react"
 import type { Photo } from "@/types"
@@ -12,9 +12,26 @@ interface PhotoGridProps {
 
 export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
   const [showAllPhotos, setShowAllPhotos] = useState(false)
+  const [isLoadingExpanded, setIsLoadingExpanded] = useState(false)
   
   // Ensure photos is always an array
   const photos = Array.isArray(rawPhotos) ? rawPhotos : []
+
+  // Handle expand with loading state
+  const handleExpand = () => {
+    setIsLoadingExpanded(true)
+    setShowAllPhotos(true)
+  }
+
+  // Simulate loading delay for smoother transition
+  useEffect(() => {
+    if (showAllPhotos && isLoadingExpanded) {
+      const timer = setTimeout(() => {
+        setIsLoadingExpanded(false)
+      }, 150)
+      return () => clearTimeout(timer)
+    }
+  }, [showAllPhotos, isLoadingExpanded])
   
   if (photos.length === 0) return null
 
@@ -97,7 +114,7 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
               className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
               onClick={() => {
                 if (isLastVisible) {
-                  setShowAllPhotos(true)
+                  handleExpand()
                 } else {
                   onPhotoClick(index)
                 }
@@ -128,18 +145,28 @@ export function PhotoGrid({ photos: rawPhotos, onPhotoClick }: PhotoGridProps) {
               </button>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              {photos.map((photo, index) => (
-                <div
-                  key={photo.id}
-                  className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
-                  onClick={() => {
-                    setShowAllPhotos(false)
-                    onPhotoClick(index)
-                  }}
-                >
-                  <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
-                </div>
-              ))}
+              {isLoadingExpanded ? (
+                // Loading skeleton
+                Array.from({ length: Math.min(photos.length, 12) }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="relative aspect-square rounded-lg overflow-hidden bg-muted animate-pulse"
+                  />
+                ))
+              ) : (
+                photos.map((photo, index) => (
+                  <div
+                    key={photo.id}
+                    className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
+                    onClick={() => {
+                      setShowAllPhotos(false)
+                      onPhotoClick(index)
+                    }}
+                  >
+                    <Image src={photo.url || "/placeholder.svg"} alt="" fill className="object-cover" />
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
