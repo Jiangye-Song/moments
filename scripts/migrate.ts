@@ -114,12 +114,17 @@ async function migrate() {
   `
   console.log("✓ Special usernames table created")
   
-  // Migrate old table if exists (drop type column, add color and restricted)
+  // Migrate old table if exists (add color and restricted columns)
   await sql`
     ALTER TABLE special_usernames ADD COLUMN IF NOT EXISTS color TEXT
   `
   await sql`
     ALTER TABLE special_usernames ADD COLUMN IF NOT EXISTS restricted TEXT NOT NULL DEFAULT 'false'
+  `
+  
+  // Drop old type column if it exists
+  await sql`
+    ALTER TABLE special_usernames DROP COLUMN IF EXISTS type
   `
   console.log("✓ Special usernames columns ensured")
   

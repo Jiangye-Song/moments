@@ -13,6 +13,7 @@ import { AdminLogin } from "./admin-login"
 import { ChangePasscode } from "./change-passcode"
 import { MaintenanceToggle } from "./maintenance-toggle"
 import { SpecialUsernamesManager } from "./special-usernames-manager"
+import { PublicUsernameEditor } from "./public-username-editor"
 import { Toaster } from "sonner"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -167,6 +168,7 @@ export function AdminDashboard() {
           <TabsContent value="profile">
             <div className="space-y-6">
               <ProfileEditor profile={profile} onUpdate={mutateProfile} />
+              <PublicUsernameEditor />
               <SpecialUsernamesManager />
             </div>
           </TabsContent>
