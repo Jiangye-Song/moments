@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import Image from "next/image"
-import { X, ChevronLeft, ChevronRight } from "lucide-react"
+import { X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import type { Photo } from "@/types"
 import { Button } from "@/components/ui/button"
 
@@ -24,6 +24,9 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
   // Zoom and pan state
   const [scale, setScale] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
+  
+  // Image loading state
+  const [isImageLoading, setIsImageLoading] = useState(true)
   
   // Refs for gesture tracking
   const containerRef = useRef<HTMLDivElement>(null)
@@ -49,7 +52,13 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
   useEffect(() => {
     setCurrentIndex(initialIndex)
     resetZoom()
+    setIsImageLoading(true)
   }, [initialIndex, resetZoom])
+
+  // Reset loading state when image changes
+  useEffect(() => {
+    setIsImageLoading(true)
+  }, [currentIndex])
 
   useEffect(() => {
     if (open) {
@@ -366,13 +375,36 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
             transformOrigin: 'center center'
           }}
         >
+          {/* Thumbnail as blurred background while loading */}
+          {isImageLoading && photos[currentIndex].thumbnailUrl && (
+            <Image
+              src={photos[currentIndex].thumbnailUrl}
+              alt=""
+              fill
+              className="object-contain pointer-events-none select-none blur-sm scale-100"
+              unoptimized
+              draggable={false}
+            />
+          )}
+          
+          {/* Loading spinner */}
+          {isImageLoading && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div className="bg-black/40 rounded-full p-3">
+                <Loader2 className="h-8 w-8 text-white animate-spin" />
+              </div>
+            </div>
+          )}
+          
+          {/* Full resolution image */}
           <Image 
             src={photos[currentIndex].url || "/placeholder.svg"} 
             alt="" 
             fill 
-            className="object-contain pointer-events-none select-none" 
+            className={`object-contain pointer-events-none select-none transition-opacity duration-300 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
             priority 
             draggable={false}
+            onLoad={() => setIsImageLoading(false)}
           />
         </div>
       </div>
