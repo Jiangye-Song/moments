@@ -11,13 +11,13 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.55 0.15 145);
+  --primary: oklch(61.335% 0.00007 271.152);
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.97 0.005 106);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.96 0.005 106);
   --muted-foreground: oklch(0.5 0 0);
-  --accent: oklch(0.55 0.15 145);
+  --accent: oklch(61.335% 0.00007 271.152);
   --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(1 0 0);
@@ -48,13 +48,13 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.2 0.01 106);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.6 0.15 145);
+  --primary: oklch(61.335% 0.00007 271.152);
   --primary-foreground: oklch(0.1 0 0);
   --secondary: oklch(0.27 0.01 106);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.27 0.01 106);
   --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.6 0.15 145);
+  --accent: oklch(61.335% 0.00007 271.152);
   --accent-foreground: oklch(0.1 0 0);
   --destructive: oklch(0.5 0.2 25);
   --destructive-foreground: oklch(0.985 0 0);
@@ -121,6 +121,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -149,7 +150,7 @@
   transition: transform 0.3s ease;
 }
 
-.void-icon-outer:hover .void-icon{
+.void-icon-outer:hover .void-icon {
   animation: spin-infinite 1s linear infinite;
   filter: brightness(20);
 }
@@ -158,6 +159,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -197,12 +199,18 @@
 }
 
 .dropdown-item:hover {
-  background-color: oklch(0.95 0.005 106);
+  background-color: var(--accent);
 }
 
-.dark .dropdown-item:hover {
-  background-color: oklch(0.35 0.01 106);
+.dropdown-item.active {
+  background-color: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
 }
+
+.dropdown-item.active:hover {
+  background-color: var(--accent);
+}
+
 
 /* Dropdown menu item with border */
 .dropdown-item-bordered {
@@ -241,6 +249,16 @@
   color: oklch(0.88 0 0);
 }
 
+.dropdown-item:hover .dropdown-item-text {
+  color: oklch(0.88 0 0);
+}
+
+.dropdown-item:hover .dropdown-item-value span,
+.dropdown-item:hover .dropdown-item-icon {
+  color: oklch(0.65 0 0);
+}
+
+
 /* Dropdown menu item value (secondary text) */
 .dropdown-item-value {
   display: flex;
@@ -271,17 +289,14 @@
   transition: background-color 0.15s ease;
 }
 
-.dropdown-back-btn:hover {
-  background-color: oklch(0.95 0.005 106);
-}
-
 .dark .dropdown-back-btn {
   color: oklch(0.65 0 0);
   border-bottom-color: oklch(0.35 0.01 106);
 }
 
-.dark .dropdown-back-btn:hover {
-  background-color: oklch(0.35 0.01 106);
+.dropdown-back-btn:hover {
+  background-color: var(--accent);
+  color: oklch(0.88 0 0) !important;
 }
 
 /* Dropdown selection item (for lists with active state) */
@@ -295,35 +310,29 @@
   transition: background-color 0.15s ease;
 }
 
-.dropdown-select-item:hover {
-  background-color: oklch(0.95 0.005 106);
-}
-
-.dark .dropdown-select-item:hover {
-  background-color: oklch(0.35 0.01 106);
-}
-
 .dropdown-select-item.active {
-  background-color: oklch(65.004% 0.00007 271.152 / 0.1);
-  color: var(--primary);
+  background-color: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
 }
 
 .dark .dropdown-select-item.active {
-  background-color: oklch(0.35 0.01 106);
-  color: var(--foreground);
+  background-color: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: color-mix(in srgb, var(--accent) 35%, #fff)
+}
+
+.dropdown-select-item:hover,
+.dark .dropdown-select-item:hover,
+.dropdown-select-item.active:hover,
+.dark .dropdown-select-item.active:hover {
+  background-color: var(--accent);
+  color: oklch(0.88 0 0) !important;
 }
 
 .dropdown-select-item span {
   font-size: 0.875rem;
 }
 
-.dropdown-select-item:not(.active) {
-  color: oklch(0.35 0 0);
-}
 
-.dark .dropdown-select-item:not(.active) {
-  color: oklch(0.88 0 0);
-}
 
 /* ===== Action Button Styles ===== */
 

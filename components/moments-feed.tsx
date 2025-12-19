@@ -65,7 +65,7 @@ const PAGE_SIZE = 4
 
 export function MomentsFeed() {
   const { t } = useLanguage()
-  const { extractFromImage, resetToDefault } = usePrimaryColor()
+  const { extractFromImage, resetToDefault, setManualColor } = usePrimaryColor()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [activeSearch, setActiveSearch] = useState("")
@@ -118,14 +118,21 @@ export function MomentsFeed() {
   const hasNetworkError = !!error && !isLoading
   const isMaintenanceMode = pages?.[0]?.maintenance === true
 
-  // Extract primary color from banner image
+  // Apply primary color based on profile settings
   useEffect(() => {
-    if (profile?.bannerUrl) {
+    if (!profile) return
+    
+    if (profile.colorSource === "custom" && profile.primaryColor) {
+      // Use custom color from profile
+      setManualColor(profile.primaryColor)
+    } else if (profile.bannerUrl) {
+      // Extract color from banner
       extractFromImage(profile.bannerUrl)
     } else {
+      // Reset to default
       resetToDefault()
     }
-  }, [profile?.bannerUrl, extractFromImage, resetToDefault])
+  }, [profile?.bannerUrl, profile?.colorSource, profile?.primaryColor, extractFromImage, resetToDefault, setManualColor])
 
   // Intersection Observer for infinite scroll
   useEffect(() => {

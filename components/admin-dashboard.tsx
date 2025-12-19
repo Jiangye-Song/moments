@@ -6,6 +6,7 @@ import { Settings, FileText, Plus, Key, Loader2 } from "lucide-react"
 import type { Post, ProfileSettings, PaginatedPosts } from "@/types"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProfileEditor } from "./profile-editor"
+import { AccentColorEditor } from "./accent-color-editor"
 import { PostsManager } from "./posts-manager"
 import { CreatePostForm } from "./create-post-form"
 import { AdminLogin } from "./admin-login"
@@ -160,6 +161,7 @@ export function AdminDashboard() {
           <TabsContent value="profile">
             <div className="space-y-6">
               <ProfileEditor profile={profile} onUpdate={mutateProfile} />
+              <AccentColorEditor profile={profile} onUpdate={mutateProfile} />
               <PublicUsernameEditor />
               <SpecialUsernamesManager />
             </div>

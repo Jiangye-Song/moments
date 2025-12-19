@@ -5,6 +5,8 @@ export const profile = pgTable("profile", {
   name: text("name").notNull().default("Moments"),
   avatarUrl: text("avatar_url"),
   bannerUrl: text("banner_url"),
+  primaryColor: text("primary_color"), // Custom accent color (hex)
+  colorSource: text("color_source").notNull().default("banner"), // 'banner' | 'custom'
 })
 
 export const settings = pgTable("settings", {

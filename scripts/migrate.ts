@@ -128,6 +128,15 @@ async function migrate() {
   `
   console.log("✓ Special usernames columns ensured")
   
+  // Add primary color settings to profile table
+  await sql`
+    ALTER TABLE profile ADD COLUMN IF NOT EXISTS primary_color TEXT
+  `
+  await sql`
+    ALTER TABLE profile ADD COLUMN IF NOT EXISTS color_source TEXT NOT NULL DEFAULT 'banner'
+  `
+  console.log("✓ Profile color settings columns ensured")
+  
   console.log("\n✅ All migrations completed successfully!")
 }
 

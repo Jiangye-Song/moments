@@ -51,6 +51,8 @@ export interface ProfileSettings {
   name: string
   avatarUrl: string | null
   bannerUrl: string | null
+  primaryColor: string | null // Custom accent color (hex)
+  colorSource: 'banner' | 'custom' // Source of accent color
 }
 
 export interface AppData {

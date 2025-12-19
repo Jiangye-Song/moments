@@ -12,6 +12,8 @@ const DEFAULT_PROFILE: ProfileSettings = {
   name: "Moments",
   avatarUrl: null,
   bannerUrl: null,
+  primaryColor: null,
+  colorSource: "banner",
 }
 
 // Extract hashtags from text
@@ -117,12 +119,16 @@ export async function getProfile(): Promise<ProfileSettings> {
       name: DEFAULT_PROFILE.name,
       avatarUrl: DEFAULT_PROFILE.avatarUrl,
       bannerUrl: DEFAULT_PROFILE.bannerUrl,
+      primaryColor: DEFAULT_PROFILE.primaryColor,
+      colorSource: DEFAULT_PROFILE.colorSource,
     }).returning()
     
     return {
       name: newProfile.name,
       avatarUrl: newProfile.avatarUrl,
       bannerUrl: newProfile.bannerUrl,
+      primaryColor: newProfile.primaryColor,
+      colorSource: (newProfile.colorSource as 'banner' | 'custom') || 'banner',
     }
   }
   
@@ -130,6 +136,8 @@ export async function getProfile(): Promise<ProfileSettings> {
     name: profiles[0].name,
     avatarUrl: profiles[0].avatarUrl,
     bannerUrl: profiles[0].bannerUrl,
+    primaryColor: profiles[0].primaryColor,
+    colorSource: (profiles[0].colorSource as 'banner' | 'custom') || 'banner',
   }
 }
 
@@ -141,12 +149,16 @@ export async function updateProfile(profileData: Partial<ProfileSettings>): Prom
       name: profileData.name || DEFAULT_PROFILE.name,
       avatarUrl: profileData.avatarUrl ?? DEFAULT_PROFILE.avatarUrl,
       bannerUrl: profileData.bannerUrl ?? DEFAULT_PROFILE.bannerUrl,
+      primaryColor: profileData.primaryColor ?? DEFAULT_PROFILE.primaryColor,
+      colorSource: profileData.colorSource ?? DEFAULT_PROFILE.colorSource,
     }).returning()
     
     return {
       name: newProfile.name,
       avatarUrl: newProfile.avatarUrl,
       bannerUrl: newProfile.bannerUrl,
+      primaryColor: newProfile.primaryColor,
+      colorSource: (newProfile.colorSource as 'banner' | 'custom') || 'banner',
     }
   }
   
@@ -155,6 +167,8 @@ export async function updateProfile(profileData: Partial<ProfileSettings>): Prom
       ...(profileData.name !== undefined && { name: profileData.name }),
       ...(profileData.avatarUrl !== undefined && { avatarUrl: profileData.avatarUrl }),
       ...(profileData.bannerUrl !== undefined && { bannerUrl: profileData.bannerUrl }),
+      ...(profileData.primaryColor !== undefined && { primaryColor: profileData.primaryColor }),
+      ...(profileData.colorSource !== undefined && { colorSource: profileData.colorSource }),
     })
     .where(eq(profile.id, profiles[0].id))
     .returning()
@@ -163,6 +177,8 @@ export async function updateProfile(profileData: Partial<ProfileSettings>): Prom
     name: updatedProfile.name,
     avatarUrl: updatedProfile.avatarUrl,
     bannerUrl: updatedProfile.bannerUrl,
+    primaryColor: updatedProfile.primaryColor,
+    colorSource: (updatedProfile.colorSource as 'banner' | 'custom') || 'banner',
   }
 }
 
