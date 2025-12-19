@@ -2,10 +2,9 @@
 import { useMemo, useState, useEffect } from "react"
 import useSWRInfinite from "swr/infinite"
 import useSWR from "swr"
-import { Settings, FileText, Plus, LogOut, Key, Loader2 } from "lucide-react"
+import { Settings, FileText, Plus, Key, Loader2 } from "lucide-react"
 import type { Post, ProfileSettings, PaginatedPosts } from "@/types"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
 import { ProfileEditor } from "./profile-editor"
 import { PostsManager } from "./posts-manager"
 import { CreatePostForm } from "./create-post-form"
@@ -14,6 +13,7 @@ import { ChangePasscode } from "./change-passcode"
 import { MaintenanceToggle } from "./maintenance-toggle"
 import { SpecialUsernamesManager } from "./special-usernames-manager"
 import { PublicUsernameEditor } from "./public-username-editor"
+import { Header } from "./header"
 import { Toaster } from "sonner"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -22,17 +22,17 @@ const PAGE_SIZE = 4
 
 export function AdminDashboard() {
   const [authState, setAuthState] = useState<"loading" | "setup" | "login" | "authenticated">("loading")
-  
+
   // Check auth status on mount
   useEffect(() => {
     checkAuth()
   }, [])
-  
+
   const checkAuth = async () => {
     try {
       const response = await fetch("/api/auth")
       const data = await response.json()
-      
+
       if (data.authenticated) {
         setAuthState("authenticated")
       } else if (!data.configured) {
@@ -44,7 +44,7 @@ export function AdminDashboard() {
       setAuthState("login")
     }
   }
-  
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth", {
@@ -57,7 +57,7 @@ export function AdminDashboard() {
       // Ignore logout errors
     }
   }
-  
+
   // Conditionally return key only when authenticated
   const getKey = (pageIndex: number, previousPageData: PaginatedPosts | null) => {
     if (authState !== "authenticated") return null
@@ -65,9 +65,9 @@ export function AdminDashboard() {
     if (pageIndex === 0) return `/api/posts?limit=${PAGE_SIZE}`
     return `/api/posts?limit=${PAGE_SIZE}&cursor=${previousPageData?.nextCursor}`
   }
-  
-  const { 
-    data: pages, 
+
+  const {
+    data: pages,
     mutate: mutatePosts,
     size,
     setSize,
@@ -75,7 +75,7 @@ export function AdminDashboard() {
     isValidating
   } = useSWRInfinite<PaginatedPosts>(getKey, fetcher)
   const { data: profile, mutate: mutateProfile } = useSWR<ProfileSettings>(
-    authState === "authenticated" ? "/api/profile" : null, 
+    authState === "authenticated" ? "/api/profile" : null,
     fetcher
   )
 
@@ -106,9 +106,9 @@ export function AdminDashboard() {
   // Show login or setup screen
   if (authState === "login" || authState === "setup") {
     return (
-      <AdminLogin 
-        isSetup={authState === "setup"} 
-        onSuccess={() => setAuthState("authenticated")} 
+      <AdminLogin
+        isSetup={authState === "setup"}
+        onSuccess={() => setAuthState("authenticated")}
       />
     )
   }
@@ -116,17 +116,9 @@ export function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Toaster position="top-center" />
-      
+
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-foreground">Admin Panel</h1>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
-      </header>
+      <Header variant="admin" onLogout={handleLogout} />
 
       <main className="max-w-4xl mx-auto px-4 py-6">
         <Tabs defaultValue="posts" className="space-y-6">
@@ -150,8 +142,8 @@ export function AdminDashboard() {
           </TabsList>
 
           <TabsContent value="posts">
-            <PostsManager 
-              posts={posts} 
+            <PostsManager
+              posts={posts}
               profile={profile}
               onUpdate={mutatePosts}
               onLoadMore={loadMore}

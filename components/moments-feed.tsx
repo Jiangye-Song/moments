@@ -5,14 +5,13 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import useSWRInfinite from "swr/infinite"
 import useSWR from "swr"
-import { Camera, User, Loader2, Search, X, WifiOff, RefreshCw, Construction } from "lucide-react"
+import { Camera, User, Loader2, X, WifiOff, RefreshCw, Construction } from "lucide-react"
 import { format } from "date-fns"
 import type { Post, ProfileSettings, PaginatedPosts } from "@/types"
 import { PostCard } from "./post-card"
 import { MomentsFeedSkeleton } from "./post-card-skeleton"
 import { UsernameDialog } from "./username-dialog"
-import { SettingsSelector } from "./settings-selector"
-import { Input } from "@/components/ui/input"
+import { Header } from "./header"
 import { Button } from "@/components/ui/button"
 import { Toaster } from "sonner"
 import { useLanguage } from "@/lib/language-context"
@@ -226,70 +225,20 @@ export function MomentsFeed() {
       <Toaster position="top-center" />
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className={`flex items-center gap-2 select-none cursor-pointer ${isSearchOpen ? "hidden sm:flex" : ""}`}
-          >
-            <img src='/icon-512.png' width={32} height={32} alt="Logo" className="select-none" draggable={false} />
-            <h1 className="text-lg font-semibold text-foreground leading-none">{t("moments")}</h1>
-          </button>
-          <div className={`flex items-center gap-2 ${isSearchOpen ? "flex-1 sm:flex-none" : ""}`}>
-            <div className={isSearchOpen ? "hidden sm:block" : ""}>
-              <SettingsSelector />
-            </div>
-            {isSearchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center gap-2 flex-1 sm:flex-none">
-                <Input
-                  type="text"
-                  placeholder={t("searchPosts")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 sm:w-56 h-8 text-sm"
-                  autoFocus
-                />
-                <button type="submit" className="header-icon-btn">
-                  <Search className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  className="header-icon-btn"
-                  onClick={() => {
-                    setIsSearchOpen(false)
-                    clearSearch()
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </form>
-            ) : (
-              <button
-                className="header-icon-btn"
-                onClick={() => setIsSearchOpen(true)}
-              >
-                <Search className="h-4 w-4" />
-              </button>
-            )}
-            <a
-              href="https://void.jy-s.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`header-icon-btn void-icon-outer group ${isSearchOpen ? "hidden sm:inline-flex" : "inline-flex"}`}
-              style={{ cursor: "default" }}
-            >
-              <img
-                src="https://jy-s.com/wp-content/uploads/2025/01/damage-void-icon-2048x2048-jdl821dd.png"
-                alt="Void"
-                className="void-icon w-4 h-4 object-contain group-hover:animate-spin"
-              />
-            </a>
-          </div>
-        </div>
+      <Header
+        variant="home"
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        onSearch={handleSearch}
+        onClearSearch={clearSearch}
+        isSearchOpen={isSearchOpen}
+        onSearchOpenChange={setIsSearchOpen}
+      />
 
-        {/* Active filter indicator */}
-        {(activeSearch || activeHashtag) && (
-          <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-2 border-t border-border/50">
+      {/* Active filter indicator */}
+      {(activeSearch || activeHashtag) && (
+        <div className="sticky top-14 z-30 bg-background/80 backdrop-blur-sm border-b border-border/50">
+          <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-2">
             <span className="text-xs text-muted-foreground">{t("filteringBy")}</span>
             {activeSearch && (
               <span className="filter-tag">
@@ -308,8 +257,8 @@ export function MomentsFeed() {
               </span>
             )}
           </div>
-        )}
-      </header>
+        </div>
+      )}
 
       {/* Cover photo area */}
       <div className="relative h-72 overflow-hidden mb-10">

@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
-import { Lock, Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react"
+import { Lock, Eye, EyeOff, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Header } from "./header"
 
 interface AdminLoginProps {
   isSetup: boolean
@@ -63,87 +63,83 @@ export function AdminLogin({ isSetup, onSuccess }: AdminLoginProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Link
-        href="/"
-        className="absolute top-4 left-4 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Home
-      </Link>
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <Lock className="h-6 w-6 text-primary" />
-          </div>
-          <CardTitle>{isSetup ? "Set Up Admin Access" : "Admin Login"}</CardTitle>
-          <CardDescription>
-            {isSetup 
-              ? "Create a passcode to secure your admin panel" 
-              : "Enter your passcode to access the admin panel"
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="passcode">{isSetup ? "New Passcode" : "Passcode"}</Label>
-              <div className="relative">
-                <Input
-                  id="passcode"
-                  type={showPasscode ? "text" : "password"}
-                  value={passcode}
-                  onChange={(e) => setPasscode(e.target.value)}
-                  placeholder="Enter passcode"
-                  className="pr-10"
-                  autoFocus
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                  onClick={() => setShowPasscode(!showPasscode)}
-                >
-                  {showPasscode ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
+    <div className="min-h-screen bg-background">
+      <Header variant="admin-login" />
+      <div className="flex items-center justify-center p-4" style={{ minHeight: "calc(100vh - 3.5rem)" }}>
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <Lock className="h-6 w-6 text-primary" />
             </div>
-            
-            {isSetup && (
+            <CardTitle>{isSetup ? "Set Up Admin Access" : "Admin Login"}</CardTitle>
+            <CardDescription>
+              {isSetup 
+                ? "Create a passcode to secure your admin panel" 
+                : "Enter your passcode to access the admin panel"
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="confirmPasscode">Confirm Passcode</Label>
-                <Input
-                  id="confirmPasscode"
-                  type={showPasscode ? "text" : "password"}
-                  value={confirmPasscode}
-                  onChange={(e) => setConfirmPasscode(e.target.value)}
-                  placeholder="Confirm passcode"
-                />
+                <Label htmlFor="passcode">{isSetup ? "New Passcode" : "Passcode"}</Label>
+                <div className="relative">
+                  <Input
+                    id="passcode"
+                    type={showPasscode ? "text" : "password"}
+                    value={passcode}
+                    onChange={(e) => setPasscode(e.target.value)}
+                    placeholder="Enter passcode"
+                    className="pr-10"
+                    autoFocus
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowPasscode(!showPasscode)}
+                  >
+                    {showPasscode ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
               </div>
-            )}
-            
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
-            
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isSetup ? "Setting up..." : "Logging in..."}
-                </>
-              ) : (
-                isSetup ? "Create Passcode" : "Login"
+              
+              {isSetup && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPasscode">Confirm Passcode</Label>
+                  <Input
+                    id="confirmPasscode"
+                    type={showPasscode ? "text" : "password"}
+                    value={confirmPasscode}
+                    onChange={(e) => setConfirmPasscode(e.target.value)}
+                    placeholder="Confirm passcode"
+                  />
+                </div>
               )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
+              
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {isSetup ? "Setting up..." : "Logging in..."}
+                  </>
+                ) : (
+                  isSetup ? "Create Passcode" : "Login"
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
