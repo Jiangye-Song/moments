@@ -12,6 +12,7 @@ import { CreatePostForm } from "./create-post-form"
 import { AdminLogin } from "./admin-login"
 import { ChangePasscode } from "./change-passcode"
 import { MaintenanceToggle } from "./maintenance-toggle"
+import { ProtectedToggle } from "./protected-toggle"
 import { SpecialUsernamesManager } from "./special-usernames-manager"
 import { PublicUsernameEditor } from "./public-username-editor"
 import { Header } from "./header"
@@ -170,6 +171,7 @@ export function AdminDashboard() {
           <TabsContent value="security">
             <div className="space-y-6">
               <MaintenanceToggle />
+              <ProtectedToggle />
               <ChangePasscode />
             </div>
           </TabsContent>

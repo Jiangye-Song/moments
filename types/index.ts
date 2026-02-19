@@ -44,6 +44,7 @@ export interface PaginatedPosts {
   posts: Post[]
   nextCursor: string | null
   maintenance?: boolean
+  protectedMode?: boolean
   usernameColors?: Record<string, string>
 }
 

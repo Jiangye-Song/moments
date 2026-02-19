@@ -523,3 +523,37 @@ export async function setMaintenanceMode(enabled: boolean): Promise<boolean> {
   
   return enabled
 }
+
+// Protected mode functions
+export async function getProtectedMode(): Promise<boolean> {
+  const result = await db
+    .select()
+    .from(settings)
+    .where(eq(settings.key, "protected_mode"))
+    .limit(1)
+  
+  if (result.length === 0) return false
+  return result[0].value === "true"
+}
+
+export async function setProtectedMode(enabled: boolean): Promise<boolean> {
+  const existing = await db
+    .select()
+    .from(settings)
+    .where(eq(settings.key, "protected_mode"))
+    .limit(1)
+  
+  if (existing.length === 0) {
+    await db.insert(settings).values({
+      key: "protected_mode",
+      value: enabled ? "true" : "false",
+    })
+  } else {
+    await db
+      .update(settings)
+      .set({ value: enabled ? "true" : "false" })
+      .where(eq(settings.key, "protected_mode"))
+  }
+  
+  return enabled
+}

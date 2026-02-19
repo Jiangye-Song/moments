@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Toaster } from "sonner"
 import { useLanguage } from "@/lib/language-context"
 import { usePrimaryColor } from "@/lib/primary-color-context"
+import { getUsername } from "@/lib/user"
 
 // Fade-in image component
 interface FadeInImageProps {
@@ -78,6 +79,11 @@ export function MomentsFeed() {
     if (previousPageData && !previousPageData.nextCursor) return null
 
     let url = `/api/posts?limit=${PAGE_SIZE}`
+    
+    // Include username for protected mode filtering
+    const username = getUsername()
+    if (username) url += `&username=${encodeURIComponent(username)}`
+    
     if (activeSearch) url += `&search=${encodeURIComponent(activeSearch)}`
     if (activeHashtag) url += `&hashtag=${encodeURIComponent(activeHashtag)}`
 
