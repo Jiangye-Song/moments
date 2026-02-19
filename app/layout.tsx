@@ -22,13 +22,13 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "Moments",
+  title: "Iris",
   description: "Jiangye's moments",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Moments",
+    title: "Iris",
   },
   formatDetection: {
     telephone: false,

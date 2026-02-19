@@ -10,7 +10,7 @@ export const languageNames: Record<Language, string> = {
 export const translations = {
   "en": {
     // Header
-    "moments": "Moments",
+    "moments": "Iris",
     "searchPosts": "Search posts...",
     "filteringBy": "Filtering by:",
     
@@ -80,7 +80,7 @@ export const translations = {
   },
   "zh-CN": {
     // Header
-    "moments": "瞬间",
+    "moments": "瞳映",
     "searchPosts": "搜索瞬间...",
     "filteringBy": "筛选中：",
     
@@ -150,7 +150,7 @@ export const translations = {
   },
   "zh-TW": {
     // Header
-    "moments": "瞬間",
+    "moments": "瞳映",
     "searchPosts": "搜尋瞬間...",
     "filteringBy": "篩選：",
     
@@ -220,7 +220,7 @@ export const translations = {
   },
   "ja": {
     // Header
-    "moments": "モーメント",
+    "moments": "瞳映",
     "searchPosts": "ポストを検索...",
     "filteringBy": "フィルター：",
     
