@@ -80,15 +80,24 @@ export async function GET(request: Request) {
     
     // Apply protected mode filtering if enabled
     let posts = result.posts
-    if (protectedEnabled && username) {
-      const lowerUsername = username.toLowerCase()
-      posts = posts.map(post => ({
-        ...post,
-        // Filter likes to only show the user's own like
-        likes: post.likes.filter(like => like.toLowerCase() === lowerUsername),
-        // Filter comments based on protected mode rules
-        comments: filterCommentsForProtectedMode(post.comments, username)
-      }))
+    if (protectedEnabled) {
+      if (username) {
+        const lowerUsername = username.toLowerCase()
+        posts = posts.map(post => ({
+          ...post,
+          // Filter likes to only show the user's own like
+          likes: post.likes.filter(like => like.toLowerCase() === lowerUsername),
+          // Filter comments based on protected mode rules
+          comments: filterCommentsForProtectedMode(post.comments, username)
+        }))
+      } else {
+        // No username provided - show no likes or comments
+        posts = posts.map(post => ({
+          ...post,
+          likes: [],
+          comments: []
+        }))
+      }
     }
     
     return NextResponse.json({ 
