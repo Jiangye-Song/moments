@@ -82,23 +82,10 @@ export function rgbToHex(r: number, g: number, b: number): string {
 }
 
 /**
- * Convert HSL to OKLCH (approximation for CSS)
- * This provides a simple conversion for CSS custom properties
+ * Convert HSL to CSS hsl() string
  */
-export function hslToOklch(h: number, s: number, l: number): string {
-  // Convert to 0-1 range
-  const lNorm = l / 100
-  const sNorm = s / 100
-  
-  // Approximate OKLCH values
-  // L in OKLCH is similar to lightness but perceptually uniform
-  const oklchL = lNorm
-  // Chroma is roughly related to saturation
-  const oklchC = sNorm * 0.2 // Scale down for OKLCH
-  // Hue is similar
-  const oklchH = h
-  
-  return `oklch(${oklchL.toFixed(3)} ${oklchC.toFixed(3)} ${oklchH})`
+export function hslToCss(h: number, s: number, l: number): string {
+  return `hsl(${h} ${s}% ${l}%)`
 }
 
 /**
@@ -217,7 +204,7 @@ export function extractDominantColor(imageUrl: string): Promise<string> {
 
 /**
  * Generate CSS custom property values from a primary color
- * Ensures primary color is dark enough for white text (max 45% lightness)
+ * Uses the color as-is without modification
  */
 export function generateColorVariables(hexColor: string): Record<string, string> {
   const rgb = hexToRgb(hexColor)
@@ -227,25 +214,22 @@ export function generateColorVariables(hexColor: string): Record<string, string>
   
   const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b)
   
-  // Ensure primary color is dark enough for white text
-  // Cap lightness at 45% for good contrast with white text
-  const darkLightness = Math.min(hsl.l, 45)
+  // Use the color as-is for both light and dark modes
+  const primaryColor = hslToCss(hsl.h, hsl.s, hsl.l)
   
-  // Generate light mode primary (dark enough for white text)
-  const lightPrimary = hslToOklch(hsl.h, Math.min(hsl.s + 10, 100), Math.max(darkLightness - 5, 30))
-  
-  // Generate dark mode primary (slightly lighter but still readable)
-  const darkPrimary = hslToOklch(hsl.h, Math.min(hsl.s + 5, 100), Math.min(darkLightness + 15, 55))
+  // For dark mode, slightly adjust lightness if needed for visibility
+  const darkLightness = Math.max(hsl.l, 40) // Ensure minimum visibility in dark mode
+  const darkPrimary = hslToCss(hsl.h, hsl.s, darkLightness)
   
   return {
-    "--primary": lightPrimary,
-    "--primary-light": lightPrimary,
+    "--primary": primaryColor,
+    "--primary-light": primaryColor,
     "--primary-dark": darkPrimary,
-    "--accent": lightPrimary,
-    "--accent-light": lightPrimary,
+    "--accent": primaryColor,
+    "--accent-light": primaryColor,
     "--accent-dark": darkPrimary,
-    "--ring": lightPrimary,
-    "--ring-light": lightPrimary,
+    "--ring": primaryColor,
+    "--ring-light": primaryColor,
     "--ring-dark": darkPrimary,
   }
 }
