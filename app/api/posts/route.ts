@@ -85,15 +85,20 @@ export async function GET(request: Request) {
         const lowerUsername = username.toLowerCase()
         posts = posts.map(post => ({
           ...post,
-          // Filter likes to only show the user's own like
-          likes: post.likes.filter(like => like.toLowerCase() === lowerUsername),
+          // Store the actual count and whether user has liked
+          likeCount: post.likes.length,
+          hasLiked: post.likes.some(like => like.toLowerCase() === lowerUsername),
+          // Clear the likes array (don't reveal who liked)
+          likes: [],
           // Filter comments based on protected mode rules
           comments: filterCommentsForProtectedMode(post.comments, username)
         }))
       } else {
-        // No username provided - show no likes or comments
+        // No username provided - show count only, no likes or comments
         posts = posts.map(post => ({
           ...post,
+          likeCount: post.likes.length,
+          hasLiked: false,
           likes: [],
           comments: []
         }))

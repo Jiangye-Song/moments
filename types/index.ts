@@ -32,6 +32,8 @@ export interface Post {
   location?: string  // Optional location
   createdAt: string
   likes: string[] // Array of usernames who liked
+  likeCount?: number // Total like count (used in protected mode)
+  hasLiked?: boolean // Whether current user has liked (used in protected mode)
   comments: Comment[]
   hashtags: string[] // Array of hashtags extracted from description
 }

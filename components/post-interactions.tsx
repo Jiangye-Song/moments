@@ -27,7 +27,12 @@ export function PostInteractions({ post, usernameColors = {}, onRequestUsername,
   const likes = post.likes || []
   const comments = post.comments || []
   const currentUser = getUsername()
-  const hasLiked = currentUser ? likes.includes(currentUser) : false
+  // In protected mode, use the hasLiked field from API; otherwise check the likes array
+  const hasLiked = post.hasLiked !== undefined ? post.hasLiked : (currentUser ? likes.includes(currentUser) : false)
+  // In protected mode, use likeCount from API; otherwise use likes array length
+  const likeCount = post.likeCount !== undefined ? post.likeCount : likes.length
+  // Check if we're in protected mode (likeCount is set but likes array is empty)
+  const isProtectedMode = post.likeCount !== undefined
 
   const handleLike = async () => {
     if (!hasUsername()) {
@@ -110,7 +115,7 @@ export function PostInteractions({ post, usernameColors = {}, onRequestUsername,
           ) : (
             <Heart className={`h-4 w-4 ${hasLiked ? "fill-primary text-primary" : ""}`} />
           )}
-          <span className="text-xs">{likes.length > 0 ? likes.length : t("like")}</span>
+          <span className="text-xs">{likeCount > 0 ? likeCount : t("like")}</span>
         </button>
         <button
           onClick={handleCommentClick}
@@ -121,8 +126,8 @@ export function PostInteractions({ post, usernameColors = {}, onRequestUsername,
         </button>
       </div>
 
-      {/* Likes List */}
-      {likes.length > 0 && (
+      {/* Likes List - Show usernames in normal mode, just count in protected mode */}
+      {likeCount > 0 && !isProtectedMode && likes.length > 0 && (
         <div className="flex items-center gap-1 text-xs">
           <Heart className="h-3 w-3 text-primary fill-primary" />
           <span className="text-foreground font-medium">
