@@ -24,9 +24,23 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
   // Zoom and pan state
   const [scale, setScale] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
-  
-  // Image loading state
-  const [isImageLoading, setIsImageLoading] = useState(true)
+
+  // Horizontal swipe drag state (finger-following)
+  const [dragOffset, setDragOffset] = useState(0)
+  const [isSwiping, setIsSwiping] = useState(false)
+  const swipeAxisRef = useRef<"none" | "horizontal" | "vertical">("none")
+
+  // Image loading state - track which photo ids have finished loading the full-res image
+  const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set())
+  const markLoaded = useCallback((id: string) => {
+    setLoadedIds((prev) => {
+      if (prev.has(id)) return prev
+      const next = new Set(prev)
+      next.add(id)
+      return next
+    })
+  }, [])
+  const isImageLoading = !loadedIds.has(photos[currentIndex]?.id ?? "")
   
   // Refs for gesture tracking
   const containerRef = useRef<HTMLDivElement>(null)
@@ -52,13 +66,9 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
   useEffect(() => {
     setCurrentIndex(initialIndex)
     resetZoom()
-    setIsImageLoading(true)
   }, [initialIndex, resetZoom])
 
-  // Reset loading state when image changes
-  useEffect(() => {
-    setIsImageLoading(true)
-  }, [currentIndex])
+  // (loading state is now derived per-photo from loadedIds)
 
   useEffect(() => {
     if (open) {
@@ -139,6 +149,7 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
         y: e.touches[0].clientY,
         time: Date.now()
       }
+      swipeAxisRef.current = "none"
       if (scale > 1) {
         isDraggingRef.current = true
       }
@@ -146,6 +157,8 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
       // Two finger touch - pinch zoom
       isPinchingRef.current = true
       isDraggingRef.current = false
+      setIsSwiping(false)
+      setDragOffset(0)
       lastTouchDistanceRef.current = getTouchDistance(e.touches)
       lastTouchCenterRef.current = getTouchCenter(e.touches)
     }
@@ -154,8 +167,7 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
   // Handle touch move
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2 && isPinchingRef.current) {
-      // Pinch zoom
-      e.preventDefault()
+      // Pinch zoom (touch-action: none on container prevents browser default)
       const distance = getTouchDistance(e.touches)
       const center = getTouchCenter(e.touches)
       
@@ -179,7 +191,6 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
       lastTouchDistanceRef.current = distance
     } else if (e.touches.length === 1 && isDraggingRef.current && scale > 1) {
       // Pan when zoomed
-      e.preventDefault()
       const touch = e.touches[0]
       if (touchStartRef.current) {
         const dx = touch.clientX - touchStartRef.current.x
@@ -194,8 +205,61 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
           time: touchStartRef.current.time
         }
       }
+    } else if (e.touches.length === 1 && scale <= 1 && touchStartRef.current && photos.length > 1) {
+      // Horizontal swipe with finger-following
+      const touch = e.touches[0]
+      const dx = touch.clientX - touchStartRef.current.x
+      const dy = touch.clientY - touchStartRef.current.y
+
+      // Lock axis after small movement
+      if (swipeAxisRef.current === "none") {
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+          swipeAxisRef.current = Math.abs(dx) > Math.abs(dy) ? "horizontal" : "vertical"
+          if (swipeAxisRef.current === "horizontal") {
+            setIsSwiping(true)
+          }
+        }
+      }
+
+      if (swipeAxisRef.current === "horizontal") {
+        setDragOffset(dx)
+      }
     }
-  }, [scale, constrainPosition])
+  }, [scale, constrainPosition, photos.length])
+
+
+  // Pending commit: when set, the track first animates to ±containerWidth,
+  // then on transition end we swap currentIndex and snap dragOffset back to 0.
+  const pendingCommitRef = useRef<"prev" | "next" | null>(null)
+
+  const commitSwipe = useCallback(
+    (direction: "prev" | "next") => {
+      const containerWidth = containerRef.current?.clientWidth ?? window.innerWidth
+      pendingCommitRef.current = direction
+      setIsSwiping(false) // re-enable transition
+      // Animate track fully off in the swipe direction
+      setDragOffset(direction === "next" ? -containerWidth : containerWidth)
+    },
+    []
+  )
+
+  const handleTrackTransitionEnd = useCallback(() => {
+    const pending = pendingCommitRef.current
+    if (!pending) return
+    pendingCommitRef.current = null
+    // Swap index and reset drag without animation
+    setIsSwiping(true) // disable transition for the snap
+    setDragOffset(0)
+    if (pending === "next") {
+      goToNext()
+    } else {
+      goToPrev()
+    }
+    // Re-enable transitions on next frame so future swipes animate again
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setIsSwiping(false))
+    })
+  }, [goToNext, goToPrev])
 
   // Handle touch end
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
@@ -218,20 +282,34 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
       const dx = touchEnd.x - touchStartRef.current.x
       const dy = touchEnd.y - touchStartRef.current.y
       const elapsed = Date.now() - touchStartRef.current.time
-      
-      // Swipe detection - only if not zoomed and quick gesture
-      if (scale <= 1 && elapsed < 300 && Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dy) < Math.abs(dx)) {
-        if (dx > 0) {
-          goToPrev()
+
+      // Horizontal swipe commit - finger-following
+      if (scale <= 1 && swipeAxisRef.current === "horizontal" && photos.length > 1) {
+        const containerWidth = containerRef.current?.clientWidth ?? window.innerWidth
+        const velocity = Math.abs(dx) / Math.max(elapsed, 1) // px/ms
+        const distanceThreshold = containerWidth * 0.2
+        const velocityThreshold = 0.4
+
+        if (Math.abs(dx) > distanceThreshold || velocity > velocityThreshold) {
+          commitSwipe(dx > 0 ? "prev" : "next")
         } else {
-          goToNext()
+          // Snap back to current
+          setIsSwiping(false)
+          setDragOffset(0)
         }
+      } else if (scale <= 1 && elapsed < 300 && Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dy) < Math.abs(dx)) {
+        // Fallback quick swipe (no axis lock triggered)
+        commitSwipe(dx > 0 ? "prev" : "next")
+      } else {
+        setIsSwiping(false)
+        setDragOffset(0)
       }
     }
-    
+
+    swipeAxisRef.current = "none"
     isDraggingRef.current = false
     touchStartRef.current = null
-  }, [scale, goToPrev, goToNext, resetZoom])
+  }, [scale, resetZoom, photos.length, commitSwipe])
 
   // Handle mouse wheel zoom
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -374,36 +452,80 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
         onMouseMove={handleMouseMove}
         onClick={handleDoubleTap}
       >
+        {/* Horizontal track holding prev/current/next slides */}
         <div
-          ref={imageRef}
-          className="relative w-full h-full transition-transform duration-75"
+          className="absolute inset-0"
           style={{
-            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-            transformOrigin: 'center center'
+            transform: `translate3d(${dragOffset}px, 0, 0)`,
+            transition: isSwiping ? "none" : "transform 250ms ease-out",
+            willChange: "transform",
+          }}
+          onTransitionEnd={(e) => {
+            if (e.propertyName === "transform") handleTrackTransitionEnd()
           }}
         >
-          {/* Thumbnail shown sharply while full image loads */}
-          {isImageLoading && photos[currentIndex].thumbnailUrl && (
-            <Image
-              src={photos[currentIndex].thumbnailUrl}
-              alt=""
-              fill
-              className="object-contain pointer-events-none select-none"
-              unoptimized
-              draggable={false}
-            />
-          )}
-
-          {/* Full resolution image */}
-          <Image 
-            src={photos[currentIndex].url || "/placeholder.svg"} 
-            alt="" 
-            fill 
-            className={`object-contain pointer-events-none select-none transition-opacity duration-300 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
-            priority 
-            draggable={false}
-            onLoad={() => setIsImageLoading(false)}
-          />
+          {[-1, 0, 1].map((offset) => {
+            const idx =
+              photos.length > 1
+                ? (currentIndex + offset + photos.length) % photos.length
+                : currentIndex
+            const isCurrent = offset === 0
+            // Don't render neighbors if only one photo
+            if (offset !== 0 && photos.length <= 1) return null
+            const photo = photos[idx]
+            const loaded = loadedIds.has(photo.id)
+            return (
+              <div
+                key={photo.id}
+                className="absolute inset-0"
+                style={{
+                  transform: `translate3d(${offset * 100}%, 0, 0)`,
+                }}
+              >
+                <div
+                  ref={isCurrent ? imageRef : undefined}
+                  className="relative w-full h-full"
+                  style={
+                    isCurrent
+                      ? {
+                          transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                          transformOrigin: "center center",
+                          transition: "transform 75ms",
+                        }
+                      : undefined
+                  }
+                >
+                  {/* Thumbnail: always rendered so neighbors are visible during swipe
+                      and the current slide has something to show while full-res loads. */}
+                  {photo.thumbnailUrl && (
+                    <Image
+                      src={photo.thumbnailUrl}
+                      alt=""
+                      fill
+                      className="object-contain pointer-events-none select-none"
+                      unoptimized
+                      draggable={false}
+                    />
+                  )}
+                  {/* Full-resolution image: only loaded for the current slide,
+                      so the loading indicator triggers on each navigation. */}
+                  {isCurrent && (
+                    <Image
+                      src={photo.url || "/placeholder.svg"}
+                      alt=""
+                      fill
+                      className={`object-contain pointer-events-none select-none transition-opacity duration-300 ${
+                        loaded ? "opacity-100" : "opacity-0"
+                      }`}
+                      priority
+                      draggable={false}
+                      onLoad={() => markLoaded(photo.id)}
+                    />
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
