@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getPresignedUploadUrl } from "@/lib/b2"
+import { getPresignedUploadUrl, getPresignedUploadUrlPair } from "@/lib/b2"
 
 // Route segment config
 export const maxDuration = 60
@@ -15,8 +15,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const name = searchParams.get("name")
     const type = searchParams.get("type")
+    const paired = searchParams.get("paired") === "1"
+    const thumbType = searchParams.get("thumbType") ?? "image/webp"
     
-    console.log(`[Upload API] Params - name: ${name}, type: ${type}`)
+    console.log(`[Upload API] Params - name: ${name}, type: ${type}, paired: ${paired}`)
 
     if (!name || !type) {
       console.log("[Upload API] Missing parameters")
@@ -33,6 +35,26 @@ export async function GET(request: Request) {
         { error: `Invalid file type: ${type}` },
         { status: 400 }
       )
+    }
+    if (paired && !allowedTypes.includes(thumbType)) {
+      return NextResponse.json(
+        { error: `Invalid thumb type: ${thumbType}` },
+        { status: 400 }
+      )
+    }
+
+    if (paired) {
+      console.log(`[Upload API] Generating paired presigned URLs for: ${name}`)
+      const { full, thumb } = await getPresignedUploadUrlPair(name, type, thumbType)
+      return NextResponse.json({
+        name,
+        presignedUrl: full.presignedUrl,
+        publicUrl: full.publicUrl,
+        thumbnail: {
+          presignedUrl: thumb.presignedUrl,
+          publicUrl: thumb.publicUrl,
+        },
+      })
     }
 
     console.log(`[Upload API] Generating presigned URL for: ${name}`)

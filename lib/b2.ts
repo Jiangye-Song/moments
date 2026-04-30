@@ -43,11 +43,7 @@ function sanitizeFilename(filename: string): string {
   return `${finalName}${extension}`
 }
 
-export async function getPresignedUploadUrl(filename: string, contentType: string) {
-  // Sanitize the filename to be URL-safe
-  const safeFilename = sanitizeFilename(filename)
-  const key = `photos/${crypto.randomUUID()}-${safeFilename}`
-  
+async function presignForKey(key: string, contentType: string) {
   const command = new PutObjectCommand({
     Bucket: B2_BUCKET_NAME,
     Key: key,
@@ -64,6 +60,39 @@ export async function getPresignedUploadUrl(filename: string, contentType: strin
   const publicUrl = `https://${B2_BUCKET_NAME}.${B2_ENDPOINT}/${key}`
 
   return { presignedUrl, publicUrl, key }
+}
+
+export async function getPresignedUploadUrl(filename: string, contentType: string) {
+  // Sanitize the filename to be URL-safe
+  const safeFilename = sanitizeFilename(filename)
+  const key = `photos/${crypto.randomUUID()}-${safeFilename}`
+  return presignForKey(key, contentType)
+}
+
+/**
+ * Mint two presigned PUTs sharing a UUID prefix:
+ *   photos/<uuid>-<name>          (full)
+ *   photos/<uuid>-<name>-thumb... (thumbnail)
+ *
+ * Both files are uploaded directly from the client; the thumbnail
+ * key uses the same `-thumb` suffix convention as `uploadThumbnail`,
+ * so existing code paths keep working.
+ */
+export async function getPresignedUploadUrlPair(
+  filename: string,
+  fullContentType: string,
+  thumbContentType: string
+) {
+  const safeFilename = sanitizeFilename(filename)
+  const baseKey = `photos/${crypto.randomUUID()}-${safeFilename}`
+  const thumbKey = baseKey.replace(/(\.[^.]+)$/, "-thumb$1")
+
+  const [full, thumb] = await Promise.all([
+    presignForKey(baseKey, fullContentType),
+    presignForKey(thumbKey, thumbContentType),
+  ])
+
+  return { full, thumb }
 }
 
 // Upload thumbnail directly to B2
