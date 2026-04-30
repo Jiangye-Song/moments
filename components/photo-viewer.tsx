@@ -348,11 +348,18 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
         <X className="h-6 w-6" />
       </Button>
 
-      {/* Image counter and zoom indicator */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 text-white text-sm flex gap-4">
+      {/* Image counter and zoom indicator - vertically aligned with close button */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 text-white text-sm flex gap-4 h-10 items-center">
         <span>{currentIndex + 1} / {photos.length}</span>
         {scale > 1 && <span>{Math.round(scale * 100)}%</span>}
       </div>
+
+      {/* Small loading indicator at top-left while full-resolution image loads */}
+      {isImageLoading && (
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 text-white text-xs bg-black/40 rounded-full px-3 h-10">
+          <Loader2 className="h-4 w-4 animate-spin" />
+        </div>
+      )}
 
       {/* Main image container */}
       <div 
@@ -375,27 +382,18 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
             transformOrigin: 'center center'
           }}
         >
-          {/* Thumbnail as blurred background while loading */}
+          {/* Thumbnail shown sharply while full image loads */}
           {isImageLoading && photos[currentIndex].thumbnailUrl && (
             <Image
               src={photos[currentIndex].thumbnailUrl}
               alt=""
               fill
-              className="object-contain pointer-events-none select-none blur-sm scale-100"
+              className="object-contain pointer-events-none select-none"
               unoptimized
               draggable={false}
             />
           )}
-          
-          {/* Loading spinner */}
-          {isImageLoading && (
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <div className="bg-black/40 rounded-full p-3">
-                <Loader2 className="h-8 w-8 text-white animate-spin" />
-              </div>
-            </div>
-          )}
-          
+
           {/* Full resolution image */}
           <Image 
             src={photos[currentIndex].url || "/placeholder.svg"} 
