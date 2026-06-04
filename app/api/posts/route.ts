@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { getPosts, addPost, getMaintenanceMode, getSpecialUsernames, getProtectedMode } from "@/lib/posts"
+import { getPosts, addPost, getMaintenanceMode, getSpecialUsernames, getProtectedMode, getTotalPostCount } from "@/lib/posts"
 import type { Post, Comment, CommentReply } from "@/types"
 
 // Filter comments for protected mode
@@ -72,10 +72,11 @@ export async function GET(request: Request) {
     const hashtag = searchParams.get("hashtag") || undefined
     const username = searchParams.get("username") || undefined
     
-    const [result, usernameColors, protectedEnabled] = await Promise.all([
+    const [result, usernameColors, protectedEnabled, totalCount] = await Promise.all([
       getPosts({ limit, cursor, search, hashtag }),
       getSpecialUsernames(),
-      isAdmin ? Promise.resolve(false) : getProtectedMode()
+      isAdmin ? Promise.resolve(false) : getProtectedMode(),
+      isAdmin ? getTotalPostCount() : Promise.resolve(undefined)
     ])
     
     // Apply protected mode filtering if enabled
@@ -107,7 +108,8 @@ export async function GET(request: Request) {
     
     return NextResponse.json({ 
       posts, 
-      nextCursor: result.nextCursor, 
+      nextCursor: result.nextCursor,
+      totalCount,
       usernameColors,
       protectedMode: protectedEnabled 
     })

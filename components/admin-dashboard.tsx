@@ -89,6 +89,7 @@ export function AdminDashboard() {
   const isLoadingMore = isLoading || (size > 0 && pages && typeof pages[size - 1] === "undefined")
   const isEmpty = !pages?.[0]?.posts?.length
   const isReachingEnd = isEmpty || (pages && !pages[pages.length - 1]?.nextCursor)
+  const totalCount = pages?.[0]?.totalCount
 
   const loadMore = () => {
     if (!isLoadingMore && !isReachingEnd) {
@@ -146,6 +147,7 @@ export function AdminDashboard() {
           <TabsContent value="posts">
             <PostsManager
               posts={posts}
+              totalCount={totalCount}
               profile={profile}
               onUpdate={mutatePosts}
               onLoadMore={loadMore}

@@ -110,6 +110,11 @@ export async function getPosts(options?: { limit?: number; cursor?: string; sear
   return { posts: result, nextCursor }
 }
 
+export async function getTotalPostCount(): Promise<number> {
+  const result = await db.select({ count: sql<number>`count(*)` }).from(posts)
+  return Number(result[0]?.count ?? 0)
+}
+
 export async function getProfile(): Promise<ProfileSettings> {
   const profiles = await db.select().from(profile).limit(1)
   

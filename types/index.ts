@@ -45,6 +45,7 @@ export interface PostsData {
 export interface PaginatedPosts {
   posts: Post[]
   nextCursor: string | null
+  totalCount?: number
   maintenance?: boolean
   protectedMode?: boolean
   usernameColors?: Record<string, string>

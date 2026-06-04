@@ -24,6 +24,7 @@ import {
 
 interface PostsManagerProps {
   posts: Post[]
+  totalCount?: number
   profile?: ProfileSettings
   onUpdate: () => void
   onLoadMore: () => void
@@ -32,7 +33,7 @@ interface PostsManagerProps {
   isLoading: boolean
 }
 
-export function PostsManager({ posts, profile, onUpdate, onLoadMore, isLoadingMore, isReachingEnd, isLoading }: PostsManagerProps) {
+export function PostsManager({ posts, totalCount, profile, onUpdate, onLoadMore, isLoadingMore, isReachingEnd, isLoading }: PostsManagerProps) {
   const [expandedPost, setExpandedPost] = useState<string | null>(null)
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [deletingPost, setDeletingPost] = useState<Post | null>(null)
@@ -89,7 +90,7 @@ export function PostsManager({ posts, profile, onUpdate, onLoadMore, isLoadingMo
       <Card>
         <CardHeader>
           <CardTitle>Manage Posts</CardTitle>
-          <CardDescription>{posts.length} post(s) total</CardDescription>
+          <CardDescription>{totalCount !== undefined ? `${totalCount} post(s) total` : `${posts.length} loaded`}</CardDescription>
         </CardHeader>
       </Card>
 
