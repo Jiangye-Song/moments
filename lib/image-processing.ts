@@ -20,7 +20,7 @@ export async function extractLocationFromImage(file: File): Promise<string | nul
     const gps = await exifr.gps(file)
     if (!gps?.latitude || !gps?.longitude) return null
 
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${gps.latitude}&lon=${gps.longitude}&format=json&zoom=10`
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${gps.latitude}&lon=${gps.longitude}&format=json&zoom=14`
     const res = await fetch(url, {
       headers: { "Accept-Language": "en", "User-Agent": "moments-app/1.0" },
     })
