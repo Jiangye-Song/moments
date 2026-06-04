@@ -5,6 +5,7 @@ import Image from "next/image"
 import { X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import type { Photo } from "@/types"
 import { Button } from "@/components/ui/button"
+import { useLanguage } from "@/lib/language-context"
 
 interface PhotoViewerProps {
   photos: Photo[]
@@ -19,6 +20,7 @@ const SWIPE_THRESHOLD = 50
 const ZOOM_SENSITIVITY = 0.002
 
 export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewerProps) {
+  const { t } = useLanguage()
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   
   // Zoom and pan state
@@ -559,7 +561,7 @@ export function PhotoViewer({ photos, initialIndex, open, onClose }: PhotoViewer
           className="absolute bottom-20 right-4 z-10 text-white hover:bg-white/10"
           onClick={resetZoom}
         >
-          Reset Zoom
+          {t("resetZoom")}
         </Button>
       )}
 

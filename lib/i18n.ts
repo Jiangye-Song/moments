@@ -77,6 +77,9 @@ export const translations = {
     // Maintenance
     "underMaintenance": "Under Maintenance",
     "maintenanceMessage": "Check back later!",
+
+    // Photo viewer
+    "resetZoom": "Reset Zoom",
   },
   "zh-CN": {
     // Header
@@ -147,6 +150,9 @@ export const translations = {
     // Maintenance
     "underMaintenance": "维护中",
     "maintenanceMessage": "请稍后再来！",
+
+    // Photo viewer
+    "resetZoom": "重置缩放",
   },
   "zh-TW": {
     // Header
@@ -217,6 +223,9 @@ export const translations = {
     // Maintenance
     "underMaintenance": "維護中",
     "maintenanceMessage": "請稍後再來！",
+
+    // Photo viewer
+    "resetZoom": "重置縮放",
   },
   "ja": {
     // Header
@@ -287,6 +296,9 @@ export const translations = {
     // Maintenance
     "underMaintenance": "メンテナンス中",
     "maintenanceMessage": "後でまたお越しください！",
+
+    // Photo viewer
+    "resetZoom": "ズームをリセット",
   },
 } as const
 
