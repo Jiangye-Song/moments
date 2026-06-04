@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Photo } from "@/types"
 import { uploadPhotos, type UploadProgress } from "@/lib/upload"
+import { extractLocationFromImage } from "@/lib/image-processing"
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB per file
 
@@ -33,6 +34,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
   const [isReordering, setIsReordering] = useState(false)
   const [reorderSelection, setReorderSelection] = useState<string[]>([])
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,6 +53,26 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
       file,
     }))
     setPhotos((prev) => [...prev, ...newPhotos])
+
+    // Auto-populate location from EXIF GPS if location box is empty
+    setLocation((prev) => {
+      if (prev.trim()) return prev // don't overwrite user input
+      setIsDetectingLocation(true)
+      ;(async () => {
+        try {
+          for (const file of files) {
+            const detected = await extractLocationFromImage(file)
+            if (detected) {
+              setLocation((cur) => (cur.trim() ? cur : detected))
+              break
+            }
+          }
+        } finally {
+          setIsDetectingLocation(false)
+        }
+      })()
+      return prev
+    })
   }
 
   const removePhoto = (id: string) => {
@@ -224,10 +246,11 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="location"
-              placeholder="Add a location (optional)"
+              placeholder={isDetectingLocation ? "Detecting location…" : "Add a location (optional)"}
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               className="pl-10"
+              disabled={isDetectingLocation}
             />
           </div>
         </div>

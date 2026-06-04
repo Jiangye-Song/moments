@@ -9,6 +9,41 @@
  * desktop), the caller should upload the original file instead.
  */
 
+/**
+ * Extracts GPS coordinates from a file's EXIF data, then reverse-geocodes
+ * them to a "suburb/city, state" string using OpenStreetMap Nominatim.
+ * Returns null silently if GPS is absent or any step fails.
+ */
+export async function extractLocationFromImage(file: File): Promise<string | null> {
+  try {
+    const exifr = await import("exifr")
+    const gps = await exifr.gps(file)
+    if (!gps?.latitude || !gps?.longitude) return null
+
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${gps.latitude}&lon=${gps.longitude}&format=json&zoom=10`
+    const res = await fetch(url, {
+      headers: { "Accept-Language": "en", "User-Agent": "moments-app/1.0" },
+    })
+    if (!res.ok) return null
+
+    const data = await res.json()
+    const addr = data?.address as Record<string, string> | undefined
+    if (!addr) return null
+
+    const suburb = addr.suburb ?? addr.neighbourhood ?? addr.village ?? addr.town ?? addr.city_district ?? ""
+    const city = addr.city ?? addr.municipality ?? addr.county ?? ""
+    const state = addr.state ?? addr.region ?? ""
+
+    const locality = suburb || city
+    if (!locality && !state) return null
+    if (!locality) return state
+    if (!state) return locality
+    return `${locality}, ${state}`
+  } catch {
+    return null
+  }
+}
+
 export interface EncodedImage {
   blob: Blob
   width: number
