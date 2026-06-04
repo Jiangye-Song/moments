@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { uploadPhotos, type UploadProgress } from "@/lib/upload"
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB per file
+const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB per file
 
 interface EditPostDialogProps {
   post: Post
@@ -46,7 +46,7 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
     // Check file sizes
     const oversizedFiles = files.filter(file => file.size > MAX_FILE_SIZE)
     if (oversizedFiles.length > 0) {
-      toast.error(`Some files are too large (max 10MB per file): ${oversizedFiles.map(f => f.name).join(", ")}`)
+      toast.error(`Some files are too large (max 25MB per file): ${oversizedFiles.map(f => f.name).join(", ")}`)
       return
     }
 
@@ -148,6 +148,10 @@ export function EditPostDialog({ post, open, onClose, onUpdate }: EditPostDialog
         const result = await uploadPhotos(files, setUploadProgress)
         uploadedPhotos = result.uploadedPhotos
         
+        if (uploadedPhotos.length === 0) {
+          throw new Error(`All uploads failed: ${result.failedUploads.join(", ")}`)
+        }
+
         if (result.failedUploads.length > 0) {
           toast.warning(`${result.failedUploads.length} file(s) failed to upload: ${result.failedUploads.join(", ")}`)
         }

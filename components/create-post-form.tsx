@@ -14,6 +14,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { Photo } from "@/types"
 import { uploadPhotos, type UploadProgress } from "@/lib/upload"
 
+const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB per file
+
 interface CreatePostFormProps {
   onCreated: () => void
 }
@@ -36,6 +38,12 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
+
+    const oversizedFiles = files.filter(file => file.size > MAX_FILE_SIZE)
+    if (oversizedFiles.length > 0) {
+      toast.error(`Some files are too large (max 25MB per file): ${oversizedFiles.map(f => f.name).join(", ")}`)
+      return
+    }
 
     const newPhotos = files.map((file) => ({
       id: crypto.randomUUID(),
