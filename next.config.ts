@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
         protocol: "https", 
         hostname: "res.hbpzp.com.cn" 
       },
+      {
+        protocol: "http",
+        hostname: "res.hbpzp.com.cn",
+      },
     ],
   },
 };
