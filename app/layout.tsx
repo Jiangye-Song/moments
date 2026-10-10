@@ -9,6 +9,8 @@ import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "Iris"
+const siteDescription = process.env.NEXT_PUBLIC_SITE_NAME || "Jiangye's moments"
 
 export const viewport: Viewport = {
   themeColor: [
@@ -22,13 +24,13 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "Iris",
-  description: "Jiangye's moments",
+  title: siteName,
+  description: siteDescription,
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Iris",
+    title: siteName,
   },
   formatDetection: {
     telephone: false,
