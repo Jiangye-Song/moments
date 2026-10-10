@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
-import { Language, translations, TranslationKey } from "./i18n"
+import { Language, translations, TranslationKey, adminTranslations } from "./i18n"
 
 const LANGUAGE_COOKIE_NAME = "moments-language"
 const SUPPORTED_LANGUAGES: Language[] = ["en", "zh-CN", "zh-TW", "ja"]
@@ -93,7 +93,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }
 
   const t = (key: TranslationKey): string => {
-    return translations[language][key] || translations.en[key] || key
+    const localeTranslations = translations[language] as Partial<Record<TranslationKey, string>>
+    return adminTranslations[language]?.[key] || localeTranslations[key] || translations.en[key] || key
   }
 
   // Prevent hydration mismatch by not rendering until mounted

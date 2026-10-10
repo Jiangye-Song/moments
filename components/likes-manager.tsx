@@ -4,6 +4,7 @@ import { useState } from "react"
 import { X, Loader2, Heart } from "lucide-react"
 import type { Post } from "@/types"
 import { Button } from "@/components/ui/button"
+import { useLanguage } from "@/lib/language-context"
 
 interface LikesManagerProps {
   post: Post
@@ -11,6 +12,7 @@ interface LikesManagerProps {
 }
 
 export function LikesManager({ post, onUpdate }: LikesManagerProps) {
+  const { t } = useLanguage()
   const [removingLike, setRemovingLike] = useState<string | null>(null)
 
   const handleRemoveLike = async (username: string) => {
@@ -32,7 +34,7 @@ export function LikesManager({ post, onUpdate }: LikesManagerProps) {
   const likes = post.likes || []
 
   if (likes.length === 0) {
-    return <p className="text-sm text-muted-foreground text-center py-4">No likes yet</p>
+    return <p className="text-sm text-muted-foreground text-center py-4">{t("noLikesYet")}</p>
   }
 
   return (

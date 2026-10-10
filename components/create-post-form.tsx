@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { Photo } from "@/types"
 import { uploadPhotos, type UploadProgress } from "@/lib/upload"
 import { extractLocationFromImage } from "@/lib/image-processing"
+import { useLanguage } from "@/lib/language-context"
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB per file
 
@@ -22,6 +23,7 @@ interface CreatePostFormProps {
 }
 
 export function CreatePostForm({ onCreated }: CreatePostFormProps) {
+  const { t } = useLanguage()
   const [photos, setPhotos] = useState<{ id: string; url: string; file?: File }[]>([])
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -188,16 +190,16 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create New Post</CardTitle>
-        <CardDescription>Add a new moment to your feed</CardDescription>
+        <CardTitle>{t("createNewPost")}</CardTitle>
+        <CardDescription>{t("addMoment")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Title */}
         <div className="space-y-2">
-          <Label htmlFor="title">Title</Label>
+          <Label htmlFor="title">{t("title")}</Label>
           <Input
             id="title"
-            placeholder="Give your moment a title"
+            placeholder={t("giveMomentTitle")}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
@@ -205,10 +207,10 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
 
         {/* Description */}
         <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">{t("description")}</Label>
           <Textarea
             id="description"
-            placeholder="What's on your mind?"
+            placeholder={t("whatsOnYourMind")}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="min-h-[100px] resize-none"
@@ -217,13 +219,13 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
 
         {/* Date picker */}
         <div className="space-y-2">
-          <Label htmlFor="date">Date</Label>
+          <Label htmlFor="date">{t("date")}</Label>
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
             <div className="relative flex-1">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="pl-10" />
             </div>
-            <span className="text-muted-foreground text-sm">to</span>
+            <span className="text-muted-foreground text-sm">{t("to")}</span>
             <div className="relative flex-1">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
@@ -236,17 +238,17 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
               />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">End date is optional. Leave empty for single-day events.</p>
+          <p className="text-xs text-muted-foreground">{t("endDateOptional")}</p>
         </div>
 
         {/* Location */}
         <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
+          <Label htmlFor="location">{t("location")}</Label>
           <div className="relative">
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="location"
-              placeholder={isDetectingLocation ? "Detecting location…" : "Add a location (optional)"}
+              placeholder={isDetectingLocation ? t("detectingLocation") : t("addLocationOptional")}
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               className="pl-10"
@@ -258,7 +260,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
         {/* Photo upload */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label>Photos</Label>
+            <Label>{t("photos")}</Label>
             {photos.length > 1 && !isReordering && (
               <Button
                 type="button"
@@ -268,7 +270,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
                 className="h-7 text-xs"
               >
                 <ArrowUpDown className="h-3 w-3 mr-1" />
-                Reorder
+                {t("reorder")}
               </Button>
             )}
             {isReordering && (
@@ -280,7 +282,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
                   onClick={cancelReordering}
                   className="h-7 text-xs"
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button
                   type="button"
@@ -289,7 +291,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
                   onClick={finishReordering}
                   className="h-7 text-xs"
                 >
-                  Done
+                  {t("done")}
                 </Button>
               </div>
             )}
@@ -345,7 +347,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
                 className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center gap-1 hover:border-muted-foreground/50 transition-colors"
               >
                 <ImagePlus className="h-6 w-6 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Add</span>
+                <span className="text-xs text-muted-foreground">{t("addPhoto")}</span>
               </button>
             )}
           </div>
@@ -358,15 +360,15 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               {isUploading && uploadProgress 
                 ? `Uploading [${uploadProgress.current}/${uploadProgress.total}]` 
-                : "Posting..."}
+                : t("posting")}
             </>
           ) : success ? (
             <>
               <Check className="h-4 w-4 mr-2" />
-              Posted!
+              {t("posted")}
             </>
           ) : (
-            "Create Post"
+            t("createPost")
           )}
         </Button>
       </CardContent>

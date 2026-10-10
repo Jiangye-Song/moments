@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { useLanguage } from "@/lib/language-context"
 
 interface SpecialUsername {
   id: string
@@ -46,6 +47,7 @@ const colorOptions = [
 ]
 
 export function SpecialUsernamesManager() {
+  const { t } = useLanguage()
   const { data: usernames, mutate } = useSWR<SpecialUsername[]>("/api/special-usernames", fetcher)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [newUsername, setNewUsername] = useState("")
@@ -164,7 +166,7 @@ export function SpecialUsernamesManager() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Special Usernames
+              {t("specialUsernames")}
             </CardTitle>
             <CardDescription>
               Manage usernames with custom colors or restrictions
@@ -174,28 +176,28 @@ export function SpecialUsernamesManager() {
             <DialogTrigger asChild>
               <Button size="sm" className="gap-2">
                 <Plus className="h-4 w-4" />
-                Add
+                {t("add")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add Special Username</DialogTitle>
+                <DialogTitle>{t("addSpecialUsername")}</DialogTitle>
                 <DialogDescription>
                   Add a username with custom highlighting or restriction
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="username">{t("username")}</Label>
                   <Input
                     id="username"
-                    placeholder="Enter username"
+                    placeholder={t("username")}
                     value={newUsername}
                     onChange={(e) => setNewUsername(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="color">Highlight Color</Label>
+                  <Label htmlFor="color">{t("highlightColor")}</Label>
                   <select
                     id="color"
                     value={newColor}
@@ -210,7 +212,7 @@ export function SpecialUsernamesManager() {
                   </select>
                   {newColor && (
                     <p className={`text-sm font-medium ${getColorClass(newColor)}`}>
-                      Preview: {newUsername || "Username"}
+                      {t("preview")}: {newUsername || t("username")}
                     </p>
                   )}
                 </div>
@@ -223,22 +225,22 @@ export function SpecialUsernamesManager() {
                     className="h-4 w-4 rounded border-gray-300"
                   />
                   <Label htmlFor="restricted" className="text-sm font-normal">
-                    Restricted (guests cannot use this name)
+                    {t("restrictedUsername")}
                   </Label>
                 </div>
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button onClick={handleAdd} disabled={isAdding}>
                   {isAdding ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Adding...
+                      {t("adding")}
                     </>
                   ) : (
-                    "Add Username"
+                    t("addUsername")
                   )}
                 </Button>
               </div>
@@ -254,8 +256,8 @@ export function SpecialUsernamesManager() {
         ) : usernames.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <User className="h-10 w-10 mx-auto mb-2 opacity-50" />
-            <p>No special usernames yet</p>
-            <p className="text-sm">Add usernames to apply custom colors or restrictions</p>
+            <p>{t("noSpecialUsernames")}</p>
+            <p className="text-sm">{t("specialUsernameHelp")}</p>
           </div>
         ) : (
           <div className="space-y-2">

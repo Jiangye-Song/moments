@@ -130,7 +130,7 @@ export function AccentColorEditor({ profile, onUpdate }: AccentColorEditorProps)
       <CardContent className="space-y-6">
         {/* Color Source Selection */}
         <div className="space-y-3">
-          <Label>Color Source</Label>
+          <Label>{t("colorSource")}</Label>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -145,8 +145,8 @@ export function AccentColorEditor({ profile, onUpdate }: AccentColorEditorProps)
                 <ImageIcon className="h-5 w-5 text-muted-foreground" />
               </div>
               <div className="text-left">
-                <div className="font-medium text-sm">From Banner</div>
-                <div className="text-xs text-muted-foreground">Extract from image</div>
+                <div className="font-medium text-sm">{t("fromBanner")}</div>
+                <div className="text-xs text-muted-foreground">{t("extractFromImage")}</div>
               </div>
               {colorSource === "banner" && (
                 <Check className="absolute top-2 right-2 h-4 w-4 text-primary" />
@@ -170,8 +170,8 @@ export function AccentColorEditor({ profile, onUpdate }: AccentColorEditorProps)
                 style={{ backgroundColor: customColor || DEFAULT_PRIMARY_COLOR }}
               />
               <div className="text-left">
-                <div className="font-medium text-sm">Custom Color</div>
-                <div className="text-xs text-muted-foreground">Choose manually</div>
+                <div className="font-medium text-sm">{t("customColor")}</div>
+                <div className="text-xs text-muted-foreground">{t("chooseManually")}</div>
               </div>
               {colorSource === "custom" && (
                 <Check className="absolute top-2 right-2 h-4 w-4 text-primary" />
@@ -185,7 +185,7 @@ export function AccentColorEditor({ profile, onUpdate }: AccentColorEditorProps)
           <div className="space-y-4">
             {/* Preset Colors */}
             <div className="space-y-2">
-              <Label>Preset Colors</Label>
+              <Label>{t("presetColors")}</Label>
               <div className="grid grid-cols-9 gap-2">
                 {PRESET_COLORS.map((color) => (
                   <button
@@ -206,7 +206,7 @@ export function AccentColorEditor({ profile, onUpdate }: AccentColorEditorProps)
 
             {/* Custom Hex Input */}
             <div className="space-y-2">
-              <Label htmlFor="customColor">Custom Hex Color</Label>
+              <Label htmlFor="customColor">{t("customHexColor")}</Label>
               <div className="flex gap-2">
                 <div 
                   className="h-10 w-10 rounded-md border flex-shrink-0"
@@ -233,14 +233,14 @@ export function AccentColorEditor({ profile, onUpdate }: AccentColorEditorProps)
 
         {/* Preview */}
         <div className="space-y-2">
-          <Label>Preview</Label>
+          <Label>{t("preview")}</Label>
           <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 border">
             <div 
               className="h-12 w-12 rounded-lg"
               style={{ backgroundColor: primaryColor }}
             />
             <div className="space-y-1">
-              <div className="text-sm font-medium">Current Accent Color</div>
+              <div className="text-sm font-medium">{t("currentAccentColor")}</div>
               <div className="text-xs text-muted-foreground font-mono">{primaryColor}</div>
             </div>
           </div>
@@ -249,7 +249,7 @@ export function AccentColorEditor({ profile, onUpdate }: AccentColorEditorProps)
         {/* No Banner Warning */}
         {colorSource === "banner" && !profile?.bannerUrl && (
           <p className="text-sm text-amber-600 dark:text-amber-400">
-            No banner image set. The default gray color will be used.
+            {t("noBannerImage")}
           </p>
         )}
 
@@ -260,7 +260,7 @@ export function AccentColorEditor({ profile, onUpdate }: AccentColorEditorProps)
               Saving...
             </>
           ) : (
-            "Save Accent Color"
+            t("saveAccentColor")
           )}
         </Button>
       </CardContent>

@@ -5,6 +5,7 @@ import { format } from "date-fns"
 import { Trash2, Reply, Loader2 } from "lucide-react"
 import type { Post, ProfileSettings, CommentReply } from "@/types"
 import { Button } from "@/components/ui/button"
+import { useLanguage } from "@/lib/language-context"
 import { Input } from "@/components/ui/input"
 
 interface CommentsManagerProps {
@@ -19,6 +20,7 @@ interface ReplyState {
 }
 
 export function CommentsManager({ post, profile, onUpdate }: CommentsManagerProps) {
+  const { t } = useLanguage()
   const [replyState, setReplyState] = useState<ReplyState | null>(null)
   const [replyText, setReplyText] = useState("")
   const [isReplying, setIsReplying] = useState(false)
@@ -99,7 +101,7 @@ export function CommentsManager({ post, profile, onUpdate }: CommentsManagerProp
   const comments = post.comments || []
 
   if (comments.length === 0) {
-    return <p className="text-sm text-muted-foreground text-center py-4">No comments yet</p>
+    return <p className="text-sm text-muted-foreground text-center py-4">{t("noCommentsYet")}</p>
   }
 
   return (

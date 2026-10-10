@@ -67,7 +67,7 @@ export function ProtectedToggle() {
         {isLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Loading...</span>
+            <span>{t("loading")}</span>
           </div>
         ) : (
           <div className="space-y-4">
@@ -91,9 +91,9 @@ export function ProtectedToggle() {
                   Updating...
                 </>
               ) : enabled ? (
-                "Disable Protected Mode"
+                t("disableProtected")
               ) : (
-                "Enable Protected Mode"
+                t("enableProtected")
               )}
             </Button>
           </div>
