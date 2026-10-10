@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
       },
       { 
         protocol: "https", 
-        hostname: "*.hbpzp.com.cn" 
+        hostname: "res.hbpzp.com.cn" 
       },
     ],
   },
