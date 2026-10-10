@@ -1,5 +1,10 @@
-import { MomentsFeed } from "@/components/moments-feed"
-
+import { MomentsFeed } from "@/components/moments-feed";
+const siteBeian = process.env.NEXT_PUBLIC_SITE_BEIAN || null;
 export default function Home() {
-  return <MomentsFeed />
+  return (
+    <div>
+      <MomentsFeed />
+      {siteBeian && <a href="https://beian.miit.gov.cn/" className="fixed bottom-0 left-0 right-0 text-white p-4 text-xs">{siteBeian}</a>}
+    </div>
+  );
 }
