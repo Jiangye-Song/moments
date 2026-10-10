@@ -26,32 +26,18 @@
 
 import { config } from "dotenv"
 import { neon } from "@neondatabase/serverless"
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
+import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
 import sharp from "sharp"
+import { storageBucketName, storageClient, storagePublicUrl } from "../lib/storage"
 
 config({ path: ".env.local" })
 
 const DATABASE_URL = process.env.DATABASE_URL!
-const B2_ENDPOINT = process.env.B2_ENDPOINT!
-const B2_KEY_ID = process.env.B2_KEY_ID!
-const B2_APP_KEY = process.env.B2_APP_KEY!
-const B2_BUCKET_NAME = process.env.B2_BUCKET_NAME!
 
 // Match the client-side encode settings in lib/image-processing.ts
 const FULL_MAX_DIM = 2560
 const FULL_QUALITY = 85
 const CACHE_MAX_AGE = 31536000 // 1 year
-
-const region = B2_ENDPOINT.replace("s3.", "").replace(".backblazeb2.com", "")
-
-const s3Client = new S3Client({
-  endpoint: `https://${B2_ENDPOINT}`,
-  region,
-  credentials: {
-    accessKeyId: B2_KEY_ID,
-    secretAccessKey: B2_APP_KEY,
-  },
-})
 
 interface Photo {
   id: string
@@ -101,22 +87,22 @@ async function reencodeToWebp(imageUrl: string): Promise<{
 }
 
 async function uploadWebp(key: string, buffer: Buffer): Promise<string> {
-  await s3Client.send(
+  await storageClient.send(
     new PutObjectCommand({
-      Bucket: B2_BUCKET_NAME,
+      Bucket: storageBucketName,
       Key: key,
       Body: buffer,
       ContentType: "image/webp",
       CacheControl: `public, max-age=${CACHE_MAX_AGE}, immutable`,
     })
   )
-  return `https://${B2_BUCKET_NAME}.${B2_ENDPOINT}/${key}`
+  return storagePublicUrl(key)
 }
 
 async function deleteOriginal(key: string): Promise<void> {
-  await s3Client.send(
+  await storageClient.send(
     new DeleteObjectCommand({
-      Bucket: B2_BUCKET_NAME,
+      Bucket: storageBucketName,
       Key: key,
     })
   )

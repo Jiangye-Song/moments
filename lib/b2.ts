@@ -1,22 +1,8 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
+import { PutObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+import { storageBucketName, storageClient, storagePublicUrl } from "./storage"
 
-const B2_ENDPOINT = process.env.B2_ENDPOINT!
-const B2_KEY_ID = process.env.B2_KEY_ID!
-const B2_APP_KEY = process.env.B2_APP_KEY!
-const B2_BUCKET_NAME = process.env.B2_BUCKET_NAME!
-
-// Extract region from endpoint (e.g., "s3.us-east-005.backblazeb2.com" -> "us-east-005")
-const region = B2_ENDPOINT.replace("s3.", "").replace(".backblazeb2.com", "")
-
-export const s3Client = new S3Client({
-  endpoint: `https://${B2_ENDPOINT}`,
-  region,
-  credentials: {
-    accessKeyId: B2_KEY_ID,
-    secretAccessKey: B2_APP_KEY,
-  },
-})
+export const s3Client = storageClient
 
 // Cache for 1 year (immutable content-addressed storage)
 const CACHE_MAX_AGE = 31536000 // 1 year in seconds
@@ -45,7 +31,7 @@ function sanitizeFilename(filename: string): string {
 
 async function presignForKey(key: string, contentType: string) {
   const command = new PutObjectCommand({
-    Bucket: B2_BUCKET_NAME,
+    Bucket: storageBucketName,
     Key: key,
     ContentType: contentType,
     // Set cache headers - browsers and CDNs will cache for 1 year
@@ -57,7 +43,7 @@ async function presignForKey(key: string, contentType: string) {
   })
 
   // Public URL for the file after upload (key is already safe, no encoding needed)
-  const publicUrl = `https://${B2_BUCKET_NAME}.${B2_ENDPOINT}/${key}`
+  const publicUrl = storagePublicUrl(key)
 
   return { presignedUrl, publicUrl, key }
 }
@@ -105,7 +91,7 @@ export async function uploadThumbnail(
   const thumbnailKey = originalKey.replace(/(\.[^.]+)$/, '-thumb$1')
   
   const command = new PutObjectCommand({
-    Bucket: B2_BUCKET_NAME,
+    Bucket: storageBucketName,
     Key: thumbnailKey,
     Body: thumbnailBuffer,
     ContentType: contentType,
@@ -114,5 +100,5 @@ export async function uploadThumbnail(
 
   await s3Client.send(command)
 
-  return `https://${B2_BUCKET_NAME}.${B2_ENDPOINT}/${thumbnailKey}`
+  return storagePublicUrl(thumbnailKey)
 }

@@ -1,32 +1,17 @@
 import { config } from "dotenv"
 import { neon } from "@neondatabase/serverless"
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
+import { PutObjectCommand } from "@aws-sdk/client-s3"
 import sharp from "sharp"
+import { storageBucketName, storageClient, storageKeyFromUrl, storagePublicUrl } from "../lib/storage"
 
 // Load .env.local for local development
 config({ path: ".env.local" })
 
 const DATABASE_URL = process.env.DATABASE_URL!
-const B2_ENDPOINT = process.env.B2_ENDPOINT!
-const B2_KEY_ID = process.env.B2_KEY_ID!
-const B2_APP_KEY = process.env.B2_APP_KEY!
-const B2_BUCKET_NAME = process.env.B2_BUCKET_NAME!
 
 const THUMBNAIL_WIDTH = 400
 const THUMBNAIL_QUALITY = 80
 const CACHE_MAX_AGE = 31536000 // 1 year
-
-// Extract region from endpoint
-const region = B2_ENDPOINT.replace("s3.", "").replace(".backblazeb2.com", "")
-
-const s3Client = new S3Client({
-  endpoint: `https://${B2_ENDPOINT}`,
-  region,
-  credentials: {
-    accessKeyId: B2_KEY_ID,
-    secretAccessKey: B2_APP_KEY,
-  },
-})
 
 interface Photo {
   id: string
@@ -60,23 +45,22 @@ async function generateThumbnail(imageUrl: string): Promise<Buffer> {
 
 async function uploadThumbnail(originalUrl: string, thumbnailBuffer: Buffer): Promise<string> {
   // Extract key from URL
-  const urlObj = new URL(originalUrl)
-  const originalKey = urlObj.pathname.slice(1) // Remove leading slash
+  const originalKey = storageKeyFromUrl(originalUrl)
   
   // Create thumbnail key with -thumb suffix and .webp extension
   const thumbnailKey = originalKey.replace(/(\.[^.]+)$/, '-thumb.webp')
 
   const command = new PutObjectCommand({
-    Bucket: B2_BUCKET_NAME,
+    Bucket: storageBucketName,
     Key: thumbnailKey,
     Body: thumbnailBuffer,
     ContentType: 'image/webp',
     CacheControl: `public, max-age=${CACHE_MAX_AGE}, immutable`,
   })
 
-  await s3Client.send(command)
+  await storageClient.send(command)
 
-  return `https://${B2_BUCKET_NAME}.${B2_ENDPOINT}/${thumbnailKey}`
+  return storagePublicUrl(thumbnailKey)
 }
 
 async function main() {
