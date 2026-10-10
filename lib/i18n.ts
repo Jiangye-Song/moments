@@ -241,7 +241,7 @@ export const translations = {
   },
   "ja": {
     // Header
-    "moments": "瞳映",
+    "moments": "どうえい",
     "searchPosts": "ポストを検索...",
     "filteringBy": "フィルター：",
     
