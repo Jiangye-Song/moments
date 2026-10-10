@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getUsername, setUsername } from "@/lib/user"
+import { useLanguage } from "@/lib/language-context"
 
 export function PublicUsernameEditor() {
+  const { t } = useLanguage()
   const [currentUsername, setCurrentUsername] = useState<string>("")
   const [newUsername, setNewUsername] = useState("")
 
@@ -45,7 +47,7 @@ export function PublicUsernameEditor() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="h-5 w-5" />
-          Public Username
+          {t("publicUsername")}
         </CardTitle>
         <CardDescription>
           Set the username you use when liking or commenting on posts
@@ -59,11 +61,11 @@ export function PublicUsernameEditor() {
         )}
         
         <div className="space-y-2">
-          <Label htmlFor="public-username">Username</Label>
+          <Label htmlFor="public-username">{t("username")}</Label>
           <div className="flex gap-2">
             <Input
               id="public-username"
-              placeholder="Enter your public username"
+              placeholder={t("username")}
               value={newUsername}
               onChange={(e) => setNewUsername(e.target.value)}
               onKeyDown={(e) => {
@@ -75,14 +77,14 @@ export function PublicUsernameEditor() {
             />
             <Button onClick={handleSave} disabled={!newUsername.trim()}>
               <Check className="h-4 w-4 mr-2" />
-              Save
+              {t("save")}
             </Button>
           </div>
         </div>
 
         {currentUsername && (
           <Button variant="outline" size="sm" onClick={handleClear}>
-            Clear Username
+            {t("clearUsername")}
           </Button>
         )}
       </CardContent>

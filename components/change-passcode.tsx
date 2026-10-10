@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
+import { useLanguage } from "@/lib/language-context"
 
 export function ChangePasscode() {
+  const { t } = useLanguage()
   const [currentPasscode, setCurrentPasscode] = useState("")
   const [newPasscode, setNewPasscode] = useState("")
   const [confirmPasscode, setConfirmPasscode] = useState("")
@@ -64,7 +66,7 @@ export function ChangePasscode() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Key className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Change Passcode</CardTitle>
+          <CardTitle className="text-lg">{t("changePasscode")}</CardTitle>
         </div>
         <CardDescription>
           Update your admin passcode
@@ -73,14 +75,14 @@ export function ChangePasscode() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="currentPasscode">Current Passcode</Label>
+            <Label htmlFor="currentPasscode">{t("currentPasscode")}</Label>
             <div className="relative">
               <Input
                 id="currentPasscode"
                 type={showPasscodes ? "text" : "password"}
                 value={currentPasscode}
                 onChange={(e) => setCurrentPasscode(e.target.value)}
-                placeholder="Enter current passcode"
+                placeholder={t("enterCurrentPasscode")}
                 className="pr-10"
               />
               <Button
@@ -100,24 +102,24 @@ export function ChangePasscode() {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="newPasscode">New Passcode</Label>
+            <Label htmlFor="newPasscode">{t("newPasscode")}</Label>
             <Input
               id="newPasscode"
               type={showPasscodes ? "text" : "password"}
               value={newPasscode}
               onChange={(e) => setNewPasscode(e.target.value)}
-              placeholder="Enter new passcode"
+              placeholder={t("enterNewPasscode")}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="confirmNewPasscode">Confirm New Passcode</Label>
+            <Label htmlFor="confirmNewPasscode">{t("confirmNewPasscode")}</Label>
             <Input
               id="confirmNewPasscode"
               type={showPasscodes ? "text" : "password"}
               value={confirmPasscode}
               onChange={(e) => setConfirmPasscode(e.target.value)}
-              placeholder="Confirm new passcode"
+              placeholder={t("confirmPasscodePlaceholder")}
             />
           </div>
           
@@ -125,10 +127,10 @@ export function ChangePasscode() {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Changing...
+                {t("changing")}
               </>
             ) : (
-              "Change Passcode"
+              t("changePasscode")
             )}
           </Button>
         </form>

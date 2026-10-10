@@ -11,6 +11,7 @@ import { EditPostDialog } from "./edit-post-dialog"
 import { CommentsManager } from "./comments-manager"
 import { LikesManager } from "./likes-manager"
 import { PostsManagerSkeleton } from "./posts-manager-skeleton"
+import { useLanguage } from "@/lib/language-context"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +35,7 @@ interface PostsManagerProps {
 }
 
 export function PostsManager({ posts, totalCount, profile, onUpdate, onLoadMore, isLoadingMore, isReachingEnd, isLoading }: PostsManagerProps) {
+  const { t } = useLanguage()
   const [expandedPost, setExpandedPost] = useState<string | null>(null)
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [deletingPost, setDeletingPost] = useState<Post | null>(null)
@@ -79,7 +81,7 @@ export function PostsManager({ posts, totalCount, profile, onUpdate, onLoadMore,
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">No posts yet. Create your first post!</p>
+          <p className="text-muted-foreground">{t("noPostsYetAdmin")}</p>
         </CardContent>
       </Card>
     )
@@ -89,7 +91,7 @@ export function PostsManager({ posts, totalCount, profile, onUpdate, onLoadMore,
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Manage Posts</CardTitle>
+          <CardTitle>{t("managePosts")}</CardTitle>
           <CardDescription>{totalCount !== undefined ? `${totalCount} post(s) total` : `${posts.length} loaded`}</CardDescription>
         </CardHeader>
       </Card>
@@ -192,11 +194,11 @@ export function PostsManager({ posts, totalCount, profile, onUpdate, onLoadMore,
         {isLoadingMore && !isReachingEnd && (
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm">Loading more...</span>
+            <span className="text-sm">{t("loadingMore")}</span>
           </div>
         )}
         {isReachingEnd && posts.length > 0 && (
-          <p className="text-sm text-muted-foreground">All posts loaded</p>
+          <p className="text-sm text-muted-foreground">{t("allPostsLoaded")}</p>
         )}
       </div>
 
@@ -204,19 +206,19 @@ export function PostsManager({ posts, totalCount, profile, onUpdate, onLoadMore,
       <AlertDialog open={!!deletingPost} onOpenChange={() => setDeletingPost(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Post</AlertDialogTitle>
+            <AlertDialogTitle>{t("deletePost")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this post? This action cannot be undone.
+              {t("deletePostConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? t("deleting") : t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -17,12 +17,14 @@ import { SpecialUsernamesManager } from "./special-usernames-manager"
 import { PublicUsernameEditor } from "./public-username-editor"
 import { Header } from "./header"
 import { Toaster } from "sonner"
+import { useLanguage } from "@/lib/language-context"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 const PAGE_SIZE = 4
 
 export function AdminDashboard() {
+  const { t } = useLanguage()
   const [authState, setAuthState] = useState<"loading" | "setup" | "login" | "authenticated">("loading")
 
   // Check auth status on mount
@@ -128,19 +130,19 @@ export function AdminDashboard() {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="posts" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Posts
+              {t("posts")}
             </TabsTrigger>
             <TabsTrigger value="create" className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Create
+              {t("create")}
             </TabsTrigger>
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
-              Profile
+              {t("profile")}
             </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center gap-2">
               <Key className="h-4 w-4" />
-              Security
+              {t("security")}
             </TabsTrigger>
           </TabsList>
 

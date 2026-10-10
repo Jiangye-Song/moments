@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { usePathname, useRouter } from "next/navigation"
-import { Search, X, LogOut } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { SettingsSelector } from "./settings-selector"
-import { useLanguage } from "@/lib/language-context"
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Search, X, LogOut } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { SettingsSelector } from "./settings-selector";
+import { useLanguage } from "@/lib/language-context";
 
 interface HeaderProps {
-  variant?: "home" | "admin-login" | "admin"
-  onLogout?: () => void
+  variant?: "home" | "admin-login" | "admin";
+  onLogout?: () => void;
   // Search props (only for home variant)
-  searchQuery?: string
-  onSearchQueryChange?: (query: string) => void
-  onSearch?: (e: React.FormEvent) => void
-  onClearSearch?: () => void
-  isSearchOpen?: boolean
-  onSearchOpenChange?: (open: boolean) => void
+  searchQuery?: string;
+  onSearchQueryChange?: (query: string) => void;
+  onSearch?: (e: React.FormEvent) => void;
+  onClearSearch?: () => void;
+  isSearchOpen?: boolean;
+  onSearchOpenChange?: (open: boolean) => void;
 }
 
 export function Header({
@@ -29,31 +29,31 @@ export function Header({
   isSearchOpen = false,
   onSearchOpenChange,
 }: HeaderProps) {
-  const { t } = useLanguage()
-  const pathname = usePathname()
-  const router = useRouter()
+  const { t } = useLanguage();
+  const pathname = usePathname();
+  const router = useRouter();
 
   const handleTitleClick = () => {
     if (pathname === "/") {
-      window.scrollTo({ top: 0, behavior: "smooth" })
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      router.push("/")
+      router.push("/");
     }
-  }
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSearch?.(e)
-  }
+    e.preventDefault();
+    onSearch?.(e);
+  };
 
   const handleCloseSearch = () => {
-    onSearchOpenChange?.(false)
-    onClearSearch?.()
-  }
+    onSearchOpenChange?.(false);
+    onClearSearch?.();
+  };
 
   const handleOpenSearch = () => {
-    onSearchOpenChange?.(true)
-  }
+    onSearchOpenChange?.(true);
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
@@ -63,20 +63,34 @@ export function Header({
           onClick={handleTitleClick}
           className={`flex items-center gap-2 select-none cursor-pointer ${variant === "home" && isSearchOpen ? "hidden sm:flex" : ""}`}
         >
-          <img src="/icon-512.png" width={32} height={32} alt="Logo" className="select-none" draggable={false} />
-          <h1 className="text-lg font-semibold text-foreground leading-none">{t("moments")}</h1>
+          <img
+            src="/icon-512.png"
+            width={32}
+            height={32}
+            alt="Logo"
+            className="select-none"
+            draggable={false}
+          />
+          <h1 className="text-lg font-semibold text-foreground leading-none">
+            {t("moments")}
+          </h1>
         </button>
 
         {/* Right side buttons */}
-        <div className={`flex items-center gap-2 ${variant === "home" && isSearchOpen ? "flex-1 sm:flex-none" : ""}`}>
+        <div
+          className={`flex items-center gap-2 ${variant === "home" && isSearchOpen ? "flex-1 sm:flex-none" : ""}`}
+        >
+          <div className={isSearchOpen ? "hidden sm:block" : ""}>
+            <SettingsSelector />
+          </div>
           {/* Home variant: Settings, Search, Void */}
           {variant === "home" && (
             <>
-              <div className={isSearchOpen ? "hidden sm:block" : ""}>
-                <SettingsSelector />
-              </div>
               {isSearchOpen ? (
-                <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 flex-1 sm:flex-none">
+                <form
+                  onSubmit={handleSearchSubmit}
+                  className="flex items-center gap-2 flex-1 sm:flex-none"
+                >
                   <Input
                     type="text"
                     placeholder={t("searchPosts")}
@@ -97,10 +111,7 @@ export function Header({
                   </button>
                 </form>
               ) : (
-                <button
-                  className="header-icon-btn"
-                  onClick={handleOpenSearch}
-                >
+                <button className="header-icon-btn" onClick={handleOpenSearch}>
                   <Search className="h-4 w-4" />
                 </button>
               )}
@@ -112,7 +123,7 @@ export function Header({
             <button
               className="header-icon-btn"
               onClick={onLogout}
-              title="Logout"
+              title={t("logout")}
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -134,5 +145,5 @@ export function Header({
         </div>
       </div>
     </header>
-  )
+  );
 }

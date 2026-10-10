@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Header } from "./header"
+import { useLanguage } from "@/lib/language-context"
 
 interface AdminLoginProps {
   isSetup: boolean
@@ -14,6 +15,7 @@ interface AdminLoginProps {
 }
 
 export function AdminLogin({ isSetup, onSuccess }: AdminLoginProps) {
+  const { t } = useLanguage()
   const [passcode, setPasscode] = useState("")
   const [confirmPasscode, setConfirmPasscode] = useState("")
   const [showPasscode, setShowPasscode] = useState(false)
@@ -71,25 +73,25 @@ export function AdminLogin({ isSetup, onSuccess }: AdminLoginProps) {
             <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
               <Lock className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle>{isSetup ? "Set Up Admin Access" : "Admin Login"}</CardTitle>
+            <CardTitle>{isSetup ? t("setUpAdminAccess") : t("adminLogin")}</CardTitle>
             <CardDescription>
               {isSetup 
-                ? "Create a passcode to secure your admin panel" 
-                : "Enter your passcode to access the admin panel"
+                ? t("createPasscodeSecure")
+                : t("enterPasscodeAccess")
               }
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="passcode">{isSetup ? "New Passcode" : "Passcode"}</Label>
+                <Label htmlFor="passcode">{isSetup ? t("newPasscode") : t("passcode")}</Label>
                 <div className="relative">
                   <Input
                     id="passcode"
                     type={showPasscode ? "text" : "password"}
                     value={passcode}
                     onChange={(e) => setPasscode(e.target.value)}
-                    placeholder="Enter passcode"
+                    placeholder={t("enterPasscode")}
                     className="pr-10"
                     autoFocus
                   />
@@ -111,13 +113,13 @@ export function AdminLogin({ isSetup, onSuccess }: AdminLoginProps) {
               
               {isSetup && (
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPasscode">Confirm Passcode</Label>
+                  <Label htmlFor="confirmPasscode">{t("confirmPasscode")}</Label>
                   <Input
                     id="confirmPasscode"
                     type={showPasscode ? "text" : "password"}
                     value={confirmPasscode}
                     onChange={(e) => setConfirmPasscode(e.target.value)}
-                    placeholder="Confirm passcode"
+                    placeholder={t("confirmPasscodePlaceholder")}
                   />
                 </div>
               )}
@@ -130,10 +132,10 @@ export function AdminLogin({ isSetup, onSuccess }: AdminLoginProps) {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isSetup ? "Setting up..." : "Logging in..."}
+                    {isSetup ? t("settingUp") : t("loggingIn")}
                   </>
                 ) : (
-                  isSetup ? "Create Passcode" : "Login"
+                  isSetup ? t("createPasscode") : t("login")
                 )}
               </Button>
             </form>

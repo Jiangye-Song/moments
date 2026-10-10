@@ -5,8 +5,10 @@ import { Construction, Loader2, AlertTriangle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { useLanguage } from "@/lib/language-context"
 
 export function MaintenanceToggle() {
+  const { t } = useLanguage()
   const [enabled, setEnabled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
@@ -55,7 +57,7 @@ export function MaintenanceToggle() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Construction className={`h-5 w-5 ${enabled ? "text-amber-500" : "text-muted-foreground"}`} />
-          <CardTitle className="text-lg">Maintenance Mode</CardTitle>
+          <CardTitle className="text-lg">{t("maintenanceMode")}</CardTitle>
         </div>
         <CardDescription>
           When enabled, visitors will see a maintenance message instead of posts

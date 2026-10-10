@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Loader2, Palette, ImageIcon, Check } from "lucide-react"
 import { toast } from "sonner"
+import { useLanguage } from "@/lib/language-context"
 import type { ProfileSettings } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,6 +40,7 @@ const PRESET_COLORS = [
 ]
 
 export function AccentColorEditor({ profile, onUpdate }: AccentColorEditorProps) {
+  const { t } = useLanguage()
   const { primaryColor, setManualColor, extractFromImage } = usePrimaryColor()
   const [colorSource, setColorSource] = useState<"banner" | "custom">(profile?.colorSource || "banner")
   const [customColor, setCustomColor] = useState(profile?.primaryColor || DEFAULT_PRIMARY_COLOR)
@@ -119,10 +121,10 @@ export function AccentColorEditor({ profile, onUpdate }: AccentColorEditorProps)
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Palette className="h-5 w-5" />
-          Accent Color
+          {t("accentColor")}
         </CardTitle>
         <CardDescription>
-          Choose the primary accent color for buttons, links, and highlights
+          {t("chooseAccentColor")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

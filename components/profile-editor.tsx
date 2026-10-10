@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { uploadSingleFile } from "@/lib/upload"
+import { useLanguage } from "@/lib/language-context"
 
 interface ProfileEditorProps {
   profile?: ProfileSettings
@@ -16,6 +17,7 @@ interface ProfileEditorProps {
 }
 
 export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
+  const { t } = useLanguage()
   const [name, setName] = useState(profile?.name || "Moments")
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || "")
   const [bannerUrl, setBannerUrl] = useState(profile?.bannerUrl || "")
@@ -70,13 +72,13 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profile Settings</CardTitle>
-        <CardDescription>Customize your profile picture, banner, and display name</CardDescription>
+        <CardTitle>{t("profileSettings")}</CardTitle>
+        <CardDescription>{t("customizeProfile")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Banner Preview */}
         <div className="space-y-2">
-          <Label>Banner Image</Label>
+          <Label>{t("bannerImage")}</Label>
           <div
             className="relative h-40 rounded-lg overflow-hidden bg-muted cursor-pointer group"
             onClick={() => bannerInputRef.current?.click()}
@@ -108,7 +110,7 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
 
         {/* Avatar Preview */}
         <div className="space-y-2">
-          <Label>Profile Picture</Label>
+          <Label>{t("profilePicture")}</Label>
           <div className="flex items-center gap-4">
             <div
               className="relative h-20 w-20 rounded-lg overflow-hidden bg-muted cursor-pointer group"
@@ -129,7 +131,7 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
                 )}
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">Click to upload a new profile picture</p>
+            <p className="text-sm text-muted-foreground">{t("uploadProfilePicture")}</p>
           </div>
           <input
             ref={avatarInputRef}
@@ -145,12 +147,12 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
 
         {/* Name */}
         <div className="space-y-2">
-          <Label htmlFor="name">Display Name</Label>
+          <Label htmlFor="name">{t("displayName")}</Label>
           <Input
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your display name"
+            placeholder={t("enterDisplayName")}
           />
         </div>
 
@@ -158,10 +160,10 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
           {isSaving ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Saving...
+              {t("saving")}
             </>
           ) : (
-            "Save Changes"
+            t("saveChanges")
           )}
         </Button>
       </CardContent>
