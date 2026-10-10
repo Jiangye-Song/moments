@@ -30,6 +30,7 @@ export function Header({
   onSearchOpenChange,
 }: HeaderProps) {
   const { t } = useLanguage();
+  const siteName = process.env.NEXT_PUBLIC_SITE_NAME;
   const pathname = usePathname();
   const router = useRouter();
 
@@ -72,7 +73,7 @@ export function Header({
             draggable={false}
           />
           <h1 className="text-lg font-semibold text-foreground leading-none">
-            {t("moments")}
+            {siteName || t("moments")}
           </h1>
         </button>
 
@@ -129,19 +130,20 @@ export function Header({
             </button>
           )}
 
-          {/* Void icon - shown on all variants */}
-          <a
-            href="https://void.jy-s.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`header-icon-btn void-icon-outer group ${variant === "home" && isSearchOpen ? "hidden sm:inline-flex" : "inline-flex"}`}
-          >
-            <img
-              src="https://jy-s.com/wp-content/uploads/2025/01/damage-void-icon-2048x2048-jdl821dd.png"
-              alt="Void"
-              className="void-icon w-4 h-4 object-contain"
-            />
-          </a>
+          {!siteName && (
+            <a
+              href="https://void.jy-s.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`header-icon-btn void-icon-outer group ${variant === "home" && isSearchOpen ? "hidden sm:inline-flex" : "inline-flex"}`}
+            >
+              <img
+                src="https://jy-s.com/wp-content/uploads/2025/01/damage-void-icon-2048x2048-jdl821dd.png"
+                alt="Void"
+                className="void-icon w-4 h-4 object-contain"
+              />
+            </a>
+          )}
         </div>
       </div>
     </header>
